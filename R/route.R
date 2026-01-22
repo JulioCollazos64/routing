@@ -66,6 +66,15 @@ Route <- R6::R6Class(
     methods = list(),
     path = character(0)
   ),
+  private = list(
+    handlesMethod = function(method) {
+      if (isTRUE(self$methods$all) || isTRUE(self$methods[[method]])) {
+        return(TRUE)
+      }
+
+      FALSE
+    }
+  ),
   lock_objects = FALSE
 )
 
