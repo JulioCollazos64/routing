@@ -55,6 +55,9 @@ Router <- R6::R6Class(
       for (method in httpMethods) {
         f <- function(path, ...) {}
         body(f) <- substitute({
+          stopifnot(
+            "Must provide a path as the first argument" = is.character(path)
+          )
           route <- self$route(path)
           do.call(
             route[[method]],
