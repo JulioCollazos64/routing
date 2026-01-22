@@ -52,7 +52,7 @@ Router <- R6::R6Class(
       self$mergeParams <- mergeParams
       self$strict <- strict
 
-      for (method in httpMethods) {
+      for (method in c(httpMethods, "all")) {
         f <- function(path, ...) {}
         body(f) <- substitute({
           stopifnot(

@@ -22,6 +22,18 @@
 #'    "e"
 #'  }
 #')
+#'
+#' route <- Route$new("/hi")
+#' route$all(
+#'   \(req, res) {
+#'     "a"
+#'   },
+#'   \(req, res) {
+#'     "b"
+#'   }
+#' )
+#' route$methods # list(all = TRUE)
+#' lapply(route$stack, function(x)x$method) # list(NULL, NULL)
 #' @return A Route object
 #' @export
 Route <- R6::R6Class(
@@ -30,7 +42,7 @@ Route <- R6::R6Class(
     initialize = function(path) {
       self$path <- path
 
-      for (method in httpMethods) {
+      for (method in c(httpMethods, "all")) {
         f <- function(...) {}
 
         body(f) <- substitute(
@@ -42,7 +54,7 @@ Route <- R6::R6Class(
 
               layer <- Layer$new("/", list(), handler)
 
-              layer[["method"]] <- method
+              layer[["method"]] <- if (method == "all") NULL else method
 
               self$stack <- append(
                 self$stack,
