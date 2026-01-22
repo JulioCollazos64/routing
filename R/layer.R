@@ -17,12 +17,31 @@ Layer <- R6::R6Class(
     matcher = NULL,
     handler = NULL,
     path = character(0),
+    params = list(),
     keys = list(),
     route = NULL,
     method = character(0),
-    slash = logical(0)
-  ),
-  list(
-    match = function(path) {}
+    slash = logical(0),
+    match = function(path) {
+      if (isTRUE(self$slash)) {
+        self$params <- list()
+        self$path <- ""
+        return(TRUE)
+      }
+
+      match <- self$matcher(path)
+
+      if (isFALSE(match)) {
+        self$params <- NULL
+        self$path <- NULL
+        return(FALSE)
+      }
+
+      self$params <- match$params
+      self$keys <- names(self$params)
+      self$path <- match$path
+
+      return(TRUE)
+    }
   )
 )
