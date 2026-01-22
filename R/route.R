@@ -48,6 +48,8 @@ Route <- R6::R6Class(
                 self$stack,
                 list(layer)
               )
+
+              self$methods[[method]] <- TRUE
             }
             invisible(self)
           },
@@ -61,6 +63,7 @@ Route <- R6::R6Class(
       }
     },
     stack = list(),
+    methods = list(),
     path = character(0)
   ),
   lock_objects = FALSE
