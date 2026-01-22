@@ -6,8 +6,6 @@ Layer <- R6::R6Class(
   "Layer",
   public = list(
     initialize = function(path, options, fn) {
-      self$path <- path
-
       self$matcher <- do.call(
         pater::match,
         c(path, options)
