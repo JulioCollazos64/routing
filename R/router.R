@@ -75,8 +75,8 @@ Router <- R6::R6Class(
       layer <- Layer$new(
         path,
         list(
-          self$caseSensitive,
-          self$strict,
+          sensitive = self$caseSensitive,
+          trailing = !self$strict,
           end = TRUE
         ),
         identity
