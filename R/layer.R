@@ -12,6 +12,7 @@ Layer <- R6::R6Class(
   "Layer",
   public = list(
     initialize = function(path, options, fn) {
+      path <- if (isTRUE(options$trailing)) loosen(path) else path
       self$matcher <- do.call(
         pater::match,
         c(path, options)
@@ -51,3 +52,13 @@ Layer <- R6::R6Class(
     }
   )
 )
+
+#' Loosen a path
+#'
+#' @examples
+#' loosen("/hello/") # "/hello"
+#' loosen("/hello//") # "/hello"
+#'
+loosen <- function(path) {
+  gsub(pattern = "/+$", replacement = "", path)
+}
