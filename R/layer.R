@@ -60,5 +60,8 @@ Layer <- R6::R6Class(
 #' loosen("/hello//") # "/hello"
 #'
 loosen <- function(path) {
+  if (identical(path, "/")) {
+    return(path)
+  }
   gsub(pattern = "/+$", replacement = "", path)
 }
