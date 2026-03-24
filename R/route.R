@@ -50,8 +50,6 @@ Route <- R6::R6Class(
             handlers <- list(...)
 
             for (handler in handlers) {
-              stopifnot(isHandler(handler))
-
               layer <- Layer$new("/", list(), handler)
 
               layer[["method"]] <- if (method == "all") NULL else method
