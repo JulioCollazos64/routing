@@ -49,7 +49,11 @@ Route <- R6::R6Class(
           {
             handlers <- list(...)
 
+            stopifnot("Argument handler is required" = length(handlers) > 0)
+
             for (handler in handlers) {
+              stopifnot("handler must be a function" = is.function(handler))
+
               layer <- Layer$new("/", list(), handler)
 
               layer[["method"]] <- if (method == "all") NULL else method
