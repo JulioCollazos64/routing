@@ -69,6 +69,42 @@ Router <- R6::R6Class(
         self[[method]] <- f
       }
     },
+    use = function(...) {
+      path <- "/"
+      offset <- 1
+
+      if (is.character(..1)) {
+        path <- ..1
+        offset <- 2
+      }
+
+      handlers <- unlist(list(...)[offset:...length()], recursive = FALSE)
+
+      for (handler in handlers) {
+        stopifnot("handler must be a function" = is.function(handler))
+
+        layer <- Layer$new(
+          path = path,
+          list(
+            sensitive = self$caseSensitive,
+            strict = FALSE,
+            end = FALSE
+          ),
+          handler
+        )
+
+        layer$route <- NULL
+
+        private$stack <- append(
+          private$stack,
+          list(
+            layer
+          )
+        )
+      }
+
+      invisible(self)
+    },
     route = function(path) {
       route <- Route$new(path)
 
@@ -80,7 +116,7 @@ Router <- R6::R6Class(
         path,
         list(
           sensitive = self$caseSensitive,
-          trailing = !self$strict,
+          strict = self$strict,
           end = TRUE
         ),
         handle

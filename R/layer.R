@@ -12,7 +12,9 @@ Layer <- R6::R6Class(
   "Layer",
   public = list(
     initialize = function(path, options, fn) {
-      path <- if (isTRUE(options$trailing)) loosen(path) else path
+      path <- if (isTRUE(options$strict)) path else loosen(path)
+      options[["trailing"]] <- !options$strict
+      options[["strict"]] <- NULL
       self$matcher <- do.call(
         pater::match,
         c(path, options)
