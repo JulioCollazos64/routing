@@ -72,6 +72,10 @@ Router <- R6::R6Class(
     route = function(path) {
       route <- Route$new(path)
 
+      handle <- function(req, res, forward) {
+        route$dispatch(req, res, forward)
+      }
+
       layer <- Layer$new(
         path,
         list(
@@ -79,7 +83,7 @@ Router <- R6::R6Class(
           trailing = !self$strict,
           end = TRUE
         ),
-        identity
+        handle
       )
 
       layer$route <- route
