@@ -29,6 +29,37 @@ Layer <- R6::R6Class(
     route = NULL,
     method = character(0),
     slash = logical(0),
+    handleError = function(error, req, res, forward) {
+      fn <- self$handler
+      if (length(formalArgs(fn)) != 4) {
+        return(forward(error))
+      }
+
+      tryCatch(
+        expr = {
+          fn(error, req, res, forward)
+        },
+        error = function(err) {
+          forward(err)
+        }
+      )
+    },
+    handleRequest = function(req, res, forward) {
+      fn <- self$handler
+
+      if (length(formalArgs(fn)) > 3) {
+        return(forward())
+      }
+
+      tryCatch(
+        expr = {
+          fn(req, res, forward)
+        },
+        error = function(err) {
+          forward(err)
+        }
+      )
+    },
     match = function(path) {
       if (isTRUE(self$slash)) {
         self$params <- list()

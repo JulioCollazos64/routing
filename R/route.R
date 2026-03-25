@@ -72,6 +72,48 @@ Route <- R6::R6Class(
         self[[method]] <- f
       }
     },
+    dispatch = function(req, res, done) {
+      idx <- 1
+
+      if (length(self$stack) == 0) {
+        return(done())
+      }
+
+      method <- tolower(req$method)
+      req$route <- self
+
+      forward <- function(err = NULL) {
+        if (!is.null(err) && identical(err, "route")) {
+          return(done())
+        }
+
+        if (!is.null(err) && identical(err, "router")) {
+          return(done(err))
+        }
+
+        if (idx > length(self$stack)) {
+          return(done(err))
+        }
+
+        match <- FALSE
+        while (!match && idx <= length(self$stack)) {
+          layer <- self$stack[[idx]]
+          idx <<- idx + 1
+          match <- is.null(layer$method) || layer$method == method
+        }
+
+        if (isFALSE(match)) {
+          return(done(err))
+        }
+
+        if (!is.null(err)) {
+          layer$handleError(err, req, res, forward)
+        } else {
+          layer$handleRequest(req, res, forward)
+        }
+      }
+      forward()
+    },
     stack = list(),
     methods = list(),
     path = character(0)
