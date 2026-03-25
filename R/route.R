@@ -118,18 +118,16 @@ Route <- R6::R6Class(
       }
       forward()
     },
-    stack = list(),
-    methods = list(),
-    path = character(0)
-  ),
-  private = list(
     handlesMethod = function(method) {
       if (isTRUE(self$methods$all) || isTRUE(self$methods[[method]])) {
         return(TRUE)
       }
 
       FALSE
-    }
+    },
+    stack = list(),
+    methods = list(),
+    path = character(0)
   ),
   lock_objects = FALSE
 )
