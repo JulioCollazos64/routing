@@ -83,7 +83,7 @@ Route <- R6::R6Class(
         return(done())
       }
 
-      method <- tolower(req$method)
+      method <- tolower(req$REQUEST_METHOD)
       req$route <- self
 
       forward <- function(err = NULL) {
