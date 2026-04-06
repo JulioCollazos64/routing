@@ -78,9 +78,14 @@ Router <- R6::R6Class(
         offset <- 2
       }
 
-      handlers <- unlist(list(...)[offset:...length()], recursive = FALSE)
+      handlers <- unlist(list(...)[offset:...length()])
 
       for (handler in handlers) {
+        if (isRouter(handler)) {
+          handler <- function(req, res, forward) {
+            handler$handle(req, res, forward)
+          }
+        }
         stopifnot("handler must be a function" = is.function(handler))
 
         layer <- Layer$new(
