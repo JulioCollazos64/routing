@@ -48,9 +48,9 @@ Router <- R6::R6Class(
       mergeParams = FALSE,
       strict = FALSE
     ) {
-      self$caseSensitive <- caseSensitive
-      self$mergeParams <- mergeParams
-      self$strict <- strict
+      private$caseSensitive <- caseSensitive
+      private$mergeParams <- mergeParams
+      private$strict <- strict
 
       for (method in c(httpMethods, "all")) {
         f <- function(path, ...) {}
@@ -91,7 +91,7 @@ Router <- R6::R6Class(
         layer <- Layer$new(
           path = path,
           list(
-            sensitive = self$caseSensitive,
+            sensitive = private$caseSensitive,
             strict = FALSE,
             end = FALSE
           ),
@@ -120,8 +120,8 @@ Router <- R6::R6Class(
       layer <- Layer$new(
         path,
         list(
-          sensitive = self$caseSensitive,
-          strict = self$strict,
+          sensitive = private$caseSensitive,
+          strict = private$strict,
           end = TRUE
         ),
         handle
@@ -140,13 +140,13 @@ Router <- R6::R6Class(
     },
     getStack = function() {
       private$stack
-    },
+    }
+  ),
+  private = list(
+    stack = list(),
     caseSensitive = logical(0),
     mergeParams = logical(0),
     strict = logical(0)
-  ),
-  private = list(
-    stack = list()
   ),
   lock_objects = FALSE
 )
