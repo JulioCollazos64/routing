@@ -80,6 +80,10 @@ Router <- R6::R6Class(
 
       handlers <- unlist(list(...)[offset:...length()])
 
+      if (!length(handlers)) {
+        stop("argument handler is required", call. = FALSE)
+      }
+
       for (handler in handlers) {
         if (isRouter(handler)) {
           handler <- function(req, res, forward) {
