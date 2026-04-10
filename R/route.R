@@ -119,6 +119,8 @@ Route <- R6::R6Class(
       forward()
     },
     handlesMethod = function(method) {
+      method <- tolower(method)
+
       if (isTRUE(self$methods$all) || isTRUE(self$methods[[method]])) {
         return(TRUE)
       }
