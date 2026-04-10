@@ -86,10 +86,16 @@ Router <- R6::R6Class(
 
       for (handler in handlers) {
         if (isRouter(handler)) {
-          handler <- function(req, res, forward) {
-            handler$handle(req, res, forward)
-          }
+          f <- function(req, res, forward) {}
+          body(f) <- substitute(
+            {
+              router$handle(req, res, forward)
+            },
+            env = list(router = handler)
+          )
+          handler <- f
         }
+
         stopifnot("handler must be a function" = is.function(handler))
 
         layer <- Layer$new(
