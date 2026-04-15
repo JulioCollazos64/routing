@@ -20,6 +20,10 @@ Layer <- R6::R6Class(
         c(path, options)
       )
 
+      if (!("forward" %in% names(formals(fn)))) {
+        formals(fn)[["forward"]] <- quote(expr = )
+      }
+
       self$handler <- fn
       self$slash <- path == "/" && isFALSE(options$end)
     },
