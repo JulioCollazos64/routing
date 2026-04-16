@@ -47,7 +47,7 @@ Route <- R6::R6Class(
 
         body(f) <- substitute(
           {
-            handlers <- list(...)
+            handlers <- unlist(list(...))
 
             stopifnot("Argument handler is required" = length(handlers) > 0)
 
