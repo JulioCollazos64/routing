@@ -69,6 +69,178 @@ Router <- R6::R6Class(
         self[[method]] <- f
       }
     },
+    handle = function(req, res, callback) {
+      if (missing(callback)) {
+        stop("argument callback is required", call. = FALSE)
+      }
+
+      idx <- 1
+      removed <- ""
+      slashAdded <- FALSE
+
+      # inter-router variables
+      parentParams <- req$params
+      parentUrl <- req$baseUrl %||% ""
+
+      # setup basic req values
+      req$baseUrl <- parentUrl
+      req$originalUrl <- req$originalUrl %||% req$PATH_INFO
+
+      forward <- function(err = NULL) {
+        # signal that handler called forward
+        do.call(
+          on.exit,
+          list(
+            substitute({
+              return(
+                structure(
+                  returnValue() %||% list(),
+                  class = "forward"
+                )
+              )
+            })
+          ),
+          envir = parent.frame()
+        )
+
+        layerError <- if (identical(err, "route")) NULL else err
+
+        if (slashAdded) {
+          req$PATH_INFO <<- gsub("^.", "", req$PATH_INFO)
+          slashAdded <<- FALSE
+        }
+
+        # restore altered req.url
+        if (nzchar(removed)) {
+          req$baseUrl <<- parentUrl
+          req$PATH_INFO <<- paste0(removed, req$PATH_INFO)
+
+          removed <<- ""
+        }
+
+        # signal to exit router
+        if (identical(layerError, "router")) {
+          return()
+        }
+
+        # no more matching layers
+        if (idx > length(private$stack)) {
+          return()
+        }
+
+        path <- req$PATH_INFO
+
+        # find the next matching layer
+        match <- FALSE
+        while (!match && idx <= length(private$stack)) {
+          layer <- private$stack[[idx]]
+          idx <<- idx + 1
+          match <- layer$match(path)
+          route <- layer$route
+
+          if (!match) {
+            next
+          }
+
+          # process non-route handlers normally
+          if (is.null(route)) {
+            next
+          }
+
+          # routes do not match with a pending error
+          if (!is.null(layerError)) {
+            match <- FALSE
+            next
+          }
+
+          method <- req$REQUEST_METHOD
+          hasMethod <- route$handlesMethod(method)
+
+          if (!hasMethod) {
+            match <- FALSE
+          }
+        }
+
+        # no match
+        if (!match) {
+          return()
+        }
+
+        # see: https://expressjs.com/en/5x/api.html#req.route
+        if (!is.null(route)) {
+          req$route <- route
+        }
+
+        # capture one-time layer values
+        req$params <- if (private$mergeParams) {
+          c(layer$params, parentParams)
+        } else {
+          layer$params
+        }
+
+        layerPath <- layer$path
+
+        if (!is.null(err)) {
+          forward(layerError %||% err)
+        } else if (!is.null(route)) {
+          layer$handleRequest(req, res, forward)
+        } else {
+          trimPrefix(
+            layer,
+            layerError,
+            layerPath,
+            path
+          )
+        }
+      }
+
+      trimPrefix <- function(layer, layerError, layerPath, path) {
+        if (nzchar(layerPath)) {
+          prefix <- substring(path, 1, last = nchar(layerPath))
+
+          if (!identical(layerPath, prefix)) {
+            forward(layerError)
+            return()
+          }
+
+          n <- nchar(layerPath) + 1L
+          c <- substring(path, n, n)
+
+          if (nzchar(c) && c != "/") {
+            forward(layerError)
+            return()
+          }
+
+          # strip prefix from path
+          removed <<- layerPath
+          req$PATH_INFO <<- substring(req$PATH_INFO, nchar(removed) + 1L)
+
+          # ensure leading slash
+          if (!startsWith(req$PATH_INFO, "/")) {
+            req$PATH_INFO <<- paste0("/", req$PATH_INFO)
+            slashAdded <<- TRUE
+          }
+
+          # update baseUrl (no trailing slash)
+          req$baseUrl <<- paste0(
+            parentUrl,
+            if (endsWith(removed, "/")) {
+              substring(removed, 1L, nchar(removed) - 1L)
+            } else {
+              removed
+            }
+          )
+        }
+
+        if (!is.null(layerError)) {
+          layer$handleError(layerError, req, res, forward)
+        } else {
+          layer$handleRequest(req, res, forward)
+        }
+      }
+
+      forward()
+    },
     use = function(...) {
       path <- "/"
       offset <- 1

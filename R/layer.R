@@ -59,7 +59,13 @@ Layer <- R6::R6Class(
 
       tryCatch(
         expr = {
-          fn(req, res, forward)
+          ret <- fn(req, res, forward)
+
+          if (isResponse(ret) || inherits(ret, "forward")) {
+            return(ret)
+          }
+
+          forward()
         },
         error = function(err) {
           forward(err)

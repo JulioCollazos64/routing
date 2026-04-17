@@ -17,3 +17,8 @@ isPromise <- function(x) {
 `%||%` <- function(x, y) {
   if (is.null(x)) y else x
 }
+
+#' httpuv response
+isResponse <- function(x) {
+  is.list(x) && all(names(x) %in% c("status", "headers", "body"))
+}
