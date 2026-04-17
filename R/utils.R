@@ -19,6 +19,8 @@ isPromise <- function(x) {
 }
 
 #' httpuv response
+#' @keywords internal
+#' @noRd
 isResponse <- function(x) {
   is.list(x) && all(names(x) %in% c("status", "headers", "body"))
 }
