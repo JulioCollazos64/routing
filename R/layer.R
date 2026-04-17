@@ -7,7 +7,7 @@
 #' layer$keys # "id"
 #'
 #' @return A Layer object
-#' @noRd internal
+#' @export
 Layer <- R6::R6Class(
   "Layer",
   public = list(
@@ -102,6 +102,8 @@ Layer <- R6::R6Class(
 #' loosen("/hello/") # "/hello"
 #' loosen("/hello//") # "/hello"
 #'
+#' @noRd
+#' @keywords internal
 loosen <- function(path) {
   if (identical(path, "/")) {
     return(path)
