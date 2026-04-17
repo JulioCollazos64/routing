@@ -3,7 +3,8 @@ Title: Express.js like routing for R web frameworks
 Version: 0.0.0.9000
 Authors@R: 
     person("Julio", "Collazos", , "amarullazo626@gmail.com", role = c("aut", "cre"))
-Description: It aims to provide R web frameworks a routing mechanism of HTTP requests inspired by the battle tested 'Express.js' library.
+Description: It aims to provide R web frameworks a routing mechanism of HTTP 
+ requests inspired by the battle tested 'Express.js' library.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
