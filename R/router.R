@@ -1,48 +1,84 @@
-#' Router Class
+#' @title Router
+#'
+#' @description
+#' A port of the [pillarjs/router](https://github.com/pillarjs/router) package
+#' for R. Maintains an ordered stack of layers; each layer pairs a path pattern
+#' with a middleware function, a nested `Router`, or a `Route` object. Middleware
+#' and nested routers are added via `$use()`; routes are added via `$route()` or
+#' the HTTP-verb shortcuts. When a request arrives, the stack is walked in order
+#' and each matching layer is invoked until the request is handled or the stack
+#' is exhausted.
+#'
+#' * **`forward()` instead of `next()`** -- `next` is a reserved word in R.
+#'   `forward("route")` and `forward("router")` work identically to their
+#'   Express counterparts.
+#' * **`forward` is implicit** -- handlers do not need to declare `forward` as
+#'   an argument to call it; it is automatically injected into the handler's
+#'   formals if absent. `function(req, res) { forward() }` works just as well
+#'   as `function(req, res, forward) { forward() }`.
+#' * **`forward` is auto-called** -- if a handler returns without calling
+#'   `forward()` or sending a response, `forward()` is called automatically.
+#' * **Error handlers take three arguments** -- write error handlers as
+#'   `(err, req, res)`; `forward` is injected automatically as the fourth
+#'   argument.
+#'
+#' ## HTTP verb shortcuts
+#'
+#' `$get()`, `$post()`, `$put()`, `$delete()`, etc. (one per HTTP verb) and
+#' `$all()` are convenience wrappers with signature `(path, ...)` equivalent to
+#' `router$route(path)$<verb>(...)`. They return `self` invisibly for chaining.
 #'
 #' @examples
-#'
 #' router <- Router$new()
 #'
 #' router$get(
 #'   "/get",
 #'   function(req, res) {
-#'     "a"
+#'     res$send("Hello there!")
 #'   }
 #' )$post(
 #'   "/post",
 #'   function(req, res) {
-#'     "b"
+#'     res$send("Goodbye!")
 #'   }
 #' )
 #'
 #' router$get(
 #'   "/hello",
 #'   function(req, res) {
-#'     "a"
+#'     forward()
 #'   },
 #'   function(req, res) {
-#'     "b"
+#'     res$send("Hello!")
 #'   }
 #' )
 #'
 #' router$post("/bye", \(req, res) {
-#'   "bye!"
+#'   res$send("Bye!")
 #' })
-#'
 #'
 #' router$route("/hi")$get(\(req, res) {
-#'   "?"
+#'   res$send("handling a GET request!")
 #' })$post(\(req, res) {
-#'   "!"
+#'   res$send("handling a POST request!")
 #' })
 #'
-#'
-#' @return A Router object
 #' @export
 Router <- R6::R6Class(
   "Router",
   public = list(
+    #' @description
+    #' Creates a new `Router`.
+    #' @param caseSensitive (`logical(1)`)\cr
+    #'   When `TRUE`, path matching is case-sensitive (`/Foo` does not match `/foo`).
+    #'   Default `FALSE`.
+    #' @param mergeParams (`logical(1)`)\cr
+    #'   When `TRUE`, `req$params` from a parent router are merged with those of
+    #'   this router instead of being replaced. Default `FALSE`.
+    #' @param strict (`logical(1)`)\cr
+    #'   When `TRUE`, trailing slashes are significant (`/foo/` does not match `/foo`).
+    #'   Default `FALSE`.
+    #' @return A new `Router` object.
     initialize = function(
       caseSensitive = FALSE,
       mergeParams = FALSE,
@@ -69,6 +105,12 @@ Router <- R6::R6Class(
         self[[method]] <- f
       }
     },
+    #' @description
+    #' Dispatches a request through the router's layer stack. Normally called
+    #' by a server or a parent router rather than directly.
+    #' @param req (`environment`)\cr Rook request environment.
+    #' @param res (`Response`)\cr Response object.
+    #' @param callback Final handler.
     handle = function(req, res, callback) {
       if (missing(callback)) {
         stop("argument callback is required", call. = FALSE)
@@ -241,6 +283,14 @@ Router <- R6::R6Class(
 
       forward()
     },
+    #' @description
+    #' Mounts one or more middleware handlers, optionally scoped to a path prefix.
+    #' A [Router] may be passed and will be wrapped automatically. Functions whose
+    #' first parameter is named `err` are treated as error handlers.
+    #' @param ... (`function | list`)\cr
+    #'   An optional leading `character(1)` path prefix, followed by one or more
+    #'   handler functions, nested lists of functions, or another [Router].
+    #' @return `self` invisibly.
     use = function(...) {
       path <- "/"
       offset <- 1
@@ -292,6 +342,10 @@ Router <- R6::R6Class(
 
       invisible(self)
     },
+    #' @description
+    #' Creates a new `Route` for `path` and appends it to the stack.
+    #' @param path (`character(1)`)\cr Path pattern.
+    #' @return The new `Route` invisibly.
     route = function(path) {
       route <- Route$new(path)
 
@@ -320,6 +374,9 @@ Router <- R6::R6Class(
 
       invisible(route)
     },
+    #' @description
+    #' Returns the internal layer stack.
+    #' @return `list` of `Layer` objects.
     getStack = function() {
       private$stack
     }

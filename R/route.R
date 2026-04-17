@@ -1,41 +1,4 @@
-#' Route Class
-#'
-#' @examples
-#'
-#' route <- Route$new("/hello")
-#' route$get(
-#'  function(req, res) {
-#'    "a"
-#'  },
-#'  function(req, res) {
-#'    "b"
-#'  }
-#'  )$post(
-#'  function(req, res) {
-#'    "c"
-#'  },
-#'  function(req, res) {
-#'    "d"
-#'  }
-#'  )$put(
-#'  function(req, res) {
-#'    "e"
-#'  }
-#')
-#'
-#' route <- Route$new("/hi")
-#' route$all(
-#'   \(req, res) {
-#'     "a"
-#'   },
-#'   \(req, res) {
-#'     "b"
-#'   }
-#' )
-#' route$methods # list(all = TRUE)
-#' lapply(route$stack, function(x)x$method) # list(NULL, NULL)
-#' @return A Route object
-#' @export
+#' @noRd
 Route <- R6::R6Class(
   "Route",
   public = list(

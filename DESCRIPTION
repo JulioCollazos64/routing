@@ -7,7 +7,7 @@ Description: It aims to provide R web frameworks a routing mechanism of HTTP
  requests inspired by the battle tested 'Express.js' library.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
+Roxygen: list(markdown = TRUE, r6 = TRUE)
 RoxygenNote: 7.3.3
 Imports: 
     pater,
