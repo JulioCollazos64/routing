@@ -65,6 +65,13 @@
 #'   res$send("handling a POST request!")
 #' })
 #'
+#' router$get(
+#'   c("/path", "/another-path"),
+#'   \(req, res) {
+#'     res$send("Hola!")
+#'   }
+#' )
+
 #' @export
 Router <- R6::R6Class(
   "Router",

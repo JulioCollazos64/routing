@@ -642,6 +642,38 @@ describe("route", {
           )
         )
       })
+
+      it("should work with a path vector of length > 1", {
+        router <- Router$new()
+        route <- router$route(c("/user/:user/poke", "/user/:user/pokes"))
+        route$all(sendParams)
+
+        server <- createServer(router)
+
+        r <- fetch(server, "/user/tj/poke")
+        expect_identical(
+          list(
+            r$status,
+            r$body
+          ),
+          list(
+            200L,
+            "user:tj"
+          )
+        )
+
+        r <- fetch(server, "/user/tj/pokes")
+        expect_identical(
+          list(
+            r$status,
+            r$body
+          ),
+          list(
+            200L,
+            "user:tj"
+          )
+        )
+      })
     })
 
     describe('using "{:name}"', {

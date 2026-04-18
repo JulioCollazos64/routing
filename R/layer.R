@@ -6,19 +6,16 @@ Layer <- R6::R6Class(
       path <- if (isTRUE(options$strict)) path else loosen(path)
       options[["trailing"]] <- if (!is.null(options$strict)) !options$strict
       options[["strict"]] <- NULL
-      self$matcher <- do.call(
-        pater::match,
-        c(path, options)
-      )
+      self$matchers <- lapply(path, matcher, options)
 
       if (!("forward" %in% names(formals(fn)))) {
         formals(fn)[["forward"]] <- quote(expr = )
       }
 
       self$handler <- fn
-      self$slash <- path == "/" && isFALSE(options$end)
+      self$slash <- identical(path, "/") && isFALSE(options$end)
     },
-    matcher = NULL,
+    matchers = list(),
     handler = NULL,
     path = character(0),
     params = list(),
@@ -70,7 +67,12 @@ Layer <- R6::R6Class(
         return(TRUE)
       }
 
-      match <- self$matcher(path)
+      idx <- 1
+      match <- FALSE
+      while (isFALSE(match) && idx <= length(self$matchers)) {
+        match <- self$matchers[[idx]](path)
+        idx <- idx + 1
+      }
 
       if (isFALSE(match)) {
         self$params <- NULL
@@ -100,4 +102,18 @@ loosen <- function(path) {
     return(path)
   }
   gsub(pattern = "/+$", replacement = "", path)
+}
+
+#' Build a matcher
+#'
+#' @param path A layer path.
+#' @param opts Arguments passed to `pater::match()`.
+#'
+#' @returns A function to match against request paths.
+#' @keywords internal
+matcher <- function(path, opts) {
+  do.call(
+    pater::match,
+    c(path, opts)
+  )
 }
