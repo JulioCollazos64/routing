@@ -11,6 +11,7 @@ and nested routers are added via \verb{$use()}; routes are added via \verb{$rout
 the HTTP-verb shortcuts. When a request arrives, the stack is walked in order
 and each matching layer is invoked until the request is handled or the stack
 is exhausted.
+\subsection{Important details}{
 \itemize{
 \item \strong{\code{forward()} instead of \code{next()}} -- \code{next} is a reserved word in R.
 \code{forward("route")} and \code{forward("router")} work identically to their
@@ -25,6 +26,8 @@ as \code{function(req, res, forward) { forward() }}.
 \verb{(err, req, res)}; \code{forward} is injected automatically as the fourth
 argument.
 }
+}
+
 \subsection{HTTP verb shortcuts}{
 
 \verb{$get()}, \verb{$post()}, \verb{$put()}, \verb{$delete()}, etc. (one per HTTP verb) and
@@ -126,7 +129,8 @@ by a server or a parent router rather than directly.
 
 \item{\code{res}}{(\code{Response})\cr Response object.}
 
-\item{\code{callback}}{Final handler.}
+\item{\code{callback}}{(\code{function})\cr
+Called when no layer matched or an unhandled error occurred.}
 }
 \if{html}{\out{</div>}}
 }
