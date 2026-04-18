@@ -8,11 +8,7 @@ Layer <- R6::R6Class(
       options[["strict"]] <- NULL
       self$matchers <- lapply(path, matcher, options)
 
-      if (!("forward" %in% names(formals(fn)))) {
-        formals(fn)[["forward"]] <- quote(expr = )
-      }
-
-      self$handler <- fn
+      self$handler <- forward_(fn)
       self$slash <- identical(path, "/") && isFALSE(options$end)
     },
     matchers = list(),
