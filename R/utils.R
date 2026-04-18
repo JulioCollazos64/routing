@@ -19,8 +19,22 @@ isPromise <- function(x) {
 }
 
 #' httpuv response
+#'
 #' @keywords internal
 #' @noRd
 isResponse <- function(x) {
   is.list(x) && all(names(x) %in% c("status", "headers", "body"))
+}
+
+#' Add forward as a function argument
+#'
+#' @keywords internal
+#' @noRd
+forward_ <- function(fn) {
+  if ("forward" %in% names(formals(fn))) {
+    return(fn)
+  }
+
+  formals(fn)[["forward"]] <- quote(expr = )
+  fn
 }
