@@ -1,13 +1,4 @@
-#' Layer Class
-#'
-#' @examples
-#' layer <- Layer$new("/path/:id", list(), identity)
-#' layer$match("/PATH/1/") # TRUE
-#' layer$params # list(id = "1")
-#' layer$keys # "id"
-#'
-#' @return A Layer object
-#' @export
+#' @noRd
 Layer <- R6::R6Class(
   "Layer",
   public = list(

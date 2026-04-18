@@ -9,6 +9,8 @@
 #' and each matching layer is invoked until the request is handled or the stack
 #' is exhausted.
 #'
+#'  ## Important details
+#'
 #' * **`forward()` instead of `next()`** -- `next` is a reserved word in R.
 #'   `forward("route")` and `forward("router")` work identically to their
 #'   Express counterparts.
@@ -110,12 +112,9 @@ Router <- R6::R6Class(
     #' by a server or a parent router rather than directly.
     #' @param req (`environment`)\cr Rook request environment.
     #' @param res (`Response`)\cr Response object.
-    #' @param callback Final handler.
+    #' @param callback (`function`)\cr
+    #'   Called when no layer matched or an unhandled error occurred.
     handle = function(req, res, callback) {
-      if (missing(callback)) {
-        stop("argument callback is required", call. = FALSE)
-      }
-
       idx <- 1
       removed <- ""
       slashAdded <- FALSE
@@ -162,12 +161,12 @@ Router <- R6::R6Class(
 
         # signal to exit router
         if (identical(layerError, "router")) {
-          return()
+          return(callback(NULL))
         }
 
         # no more matching layers
         if (idx > length(private$stack)) {
-          return()
+          return(callback(layerError))
         }
 
         path <- req$PATH_INFO
@@ -205,7 +204,7 @@ Router <- R6::R6Class(
 
         # no match
         if (!match) {
-          return()
+          return(callback(layerError))
         }
 
         # see: https://expressjs.com/en/5x/api.html#req.route
