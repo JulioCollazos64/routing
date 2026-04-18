@@ -381,6 +381,54 @@ Router <- R6::R6Class(
       invisible(route)
     },
     #' @description
+    #' Registers a callback triggered whenever a named route parameter is
+    #' present in a matched route. The callback runs before the route handler.
+    #'
+    #' The callback signature is `function(req, res, value, name)`:
+    #' * `value` -- the captured value of the parameter.
+    #' * `name`  -- the parameter name (character).
+    #'
+    #' @param name (`character(1)`)\cr Name of the route parameter to watch.
+    #' @param fn (`function`)\cr
+    #'   Callback with signature `function(req, res, value, name)`.
+    #' @return `self` invisibly.
+    #'
+    #' @examples
+    #' router <- Router$new()
+    #'
+    #' router$param("id", \(req, res, value, name) {
+    #'   user <- findUser(value)
+    #'   req$user <- list(id = value, name = user$name)
+    #'   forward()
+    #' })
+    #'
+    #' router$get("/user/:id", \(req, res) {
+    #'   res$send(paste("user:", req$user$name))
+    #' })
+    param = function(name, fn) {
+      if (missing(name)) {
+        stop("argument name is required", call. = FALSE)
+      }
+
+      if (!is.character(name)) {
+        stop("argument name must be a string", call. = FALSE)
+      }
+
+      if (missing(fn)) {
+        stop("argument fn is required", call. = FALSE)
+      }
+
+      if (!is.function(fn)) {
+        stop("argument fn must be a function", call. = FALSE)
+      }
+
+      fn <- forward_(fn)
+
+      private$params[[name]] <- append(private$params[[name]], list(fn))
+
+      invisible(self)
+    },
+    #' @description
     #' Returns the internal layer stack.
     #' @return `list` of `Layer` objects.
     getStack = function() {
@@ -391,7 +439,8 @@ Router <- R6::R6Class(
     stack = list(),
     caseSensitive = logical(0),
     mergeParams = logical(0),
-    strict = logical(0)
+    strict = logical(0),
+    params = list()
   ),
   lock_objects = FALSE
 )
