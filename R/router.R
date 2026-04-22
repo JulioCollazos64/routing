@@ -223,7 +223,7 @@ Router <- R6::R6Class(
 
         # capture one-time layer values
         req$params <- if (private$mergeParams) {
-          c(layer$params, parentParams)
+          mergeParams(layer$params, parentParams)
         } else {
           layer$params
         }
@@ -561,4 +561,17 @@ restore <- function(fn, obj, ...) {
     }
     fn(...)
   }
+}
+
+
+#' Merge params with parent params
+#'
+#' @keywords internal
+#' @noRd
+mergeParams <- function(params, parent) {
+  if (!is.list(parent) || !length(parent)) {
+    return(params)
+  }
+
+  modifyList(parent, params)
 }
