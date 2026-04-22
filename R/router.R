@@ -433,7 +433,7 @@ Router <- R6::R6Class(
         stop("argument fn must be a function", call. = FALSE)
       }
 
-      fn <- forward_(fn)
+      fn <- withforward(fn)
 
       private$params[[name]] <- append(private$params[[name]], list(fn))
 

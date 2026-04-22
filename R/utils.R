@@ -30,7 +30,7 @@ isResponse <- function(x) {
 #'
 #' @keywords internal
 #' @noRd
-forward_ <- function(fn) {
+withforward <- function(fn) {
   if ("forward" %in% names(formals(fn))) {
     return(fn)
   }

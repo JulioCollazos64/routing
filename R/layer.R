@@ -8,7 +8,7 @@ Layer <- R6::R6Class(
       options[["strict"]] <- NULL
       self$matchers <- lapply(path, matcher, options)
 
-      self$handler <- forward_(fn)
+      self$handler <- withforward(fn)
       self$slash <- identical(path, "/") && isFALSE(options$end)
     },
     matchers = list(),
