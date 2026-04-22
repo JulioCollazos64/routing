@@ -15,7 +15,7 @@ Response <- R6::R6Class(
 )
 
 
-createServer <- function(router) {
+createServer <- function(handler) {
   httpuv::startServer(
     "127.0.0.1",
     httpuv::randomPort(),
@@ -23,7 +23,11 @@ createServer <- function(router) {
       call = function(req) {
         res <- Response$new()
 
-        router$handle(req, res, callback = finalHandler(req, res))
+        if (isRouter(handler)) {
+          handler$handle(req, res, callback = finalHandler(req, res))
+        } else {
+          handler(req, res)
+        }
       }
     )
   )
@@ -126,4 +130,18 @@ sendParams <- function(req, res) {
   )
 
   res$send(params)
+}
+
+hitParams <- function(num) {
+  name <- paste0("x-params-", num)
+  function(req, res) {
+    res$headers[[name]] <- yyjsonr::write_json_str(req$params)
+    forward()
+  }
+}
+
+sawParams <- function(req, res) {
+  res$status <- 200L
+  res$headers[["Content-Type"]] <- "application/json"
+  res$send(yyjsonr::write_json_str(req$params))
 }
