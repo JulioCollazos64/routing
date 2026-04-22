@@ -125,6 +125,7 @@ Router <- R6::R6Class(
       idx <- 1
       removed <- ""
       slashAdded <- FALSE
+      paramCalled <- new.env()
 
       # inter-router variables
       parentParams <- req$params
@@ -228,18 +229,28 @@ Router <- R6::R6Class(
 
         layerPath <- layer$path
 
-        if (!is.null(err)) {
-          forward(layerError %||% err)
-        } else if (!is.null(route)) {
-          layer$handleRequest(req, res, forward)
-        } else {
-          trimPrefix(
-            layer,
-            layerError,
-            layerPath,
-            path
-          )
-        }
+        private$processParams(
+          private$params,
+          layer,
+          # if it were a list, will modify only its own copy (won't work).
+          paramCalled,
+          req,
+          res,
+          function(err = NULL) {
+            if (!is.null(err)) {
+              forward(layerError %||% err)
+            } else if (!is.null(route)) {
+              layer$handleRequest(req, res, forward)
+            } else {
+              trimPrefix(
+                layer,
+                layerError,
+                layerPath,
+                path
+              )
+            }
+          }
+        )
       }
 
       trimPrefix <- function(layer, layerError, layerPath, path) {
@@ -440,7 +451,92 @@ Router <- R6::R6Class(
     caseSensitive = logical(0),
     mergeParams = logical(0),
     strict = logical(0),
-    params = list()
+    params = list(),
+    processParams = function(params, layer, called, req, res, done) {
+      keys <- layer$keys
+
+      if (!length(keys)) {
+        return(done())
+      }
+
+      index <- 1
+      paramIndex <- 1
+      key <- NULL
+      paramVal <- NULL
+      paramCallbacks <- NULL
+
+      param <- function(err = NULL) {
+        if (!is.null(err)) {
+          return(done(err))
+        }
+
+        if (index > length(keys)) {
+          return(done())
+        }
+
+        paramIndex <<- 1
+        key <<- keys[[index]]
+        index <<- index + 1
+        paramVal <<- req$params[[key]]
+        # Extract the callbacks for the given param
+        paramCallbacks <<- params[[key]]
+        paramCalled <- called[[key]]
+
+        if (is.null(paramVal) || !length(paramCallbacks)) {
+          return(param())
+        }
+
+        # param previously called with same value or error occurred
+        if (
+          !is.null(paramCalled) &&
+            (identical(paramCalled$match, paramVal) ||
+              (!is.null(paramCalled$error) &&
+                !identical(paramCalled$error, "route")))
+        ) {
+          # restore value
+          req$params[[key]] <- paramCalled$value
+          return(param(paramCalled$error))
+        }
+
+        called[[key]] <- list(error = NULL, match = paramVal, value = paramVal)
+
+        paramCallback()
+      }
+
+      # Single param callbacks
+      paramCallback <- function(err = NULL) {
+        fn <- paramCallbacks[paramIndex][[1]]
+        paramIndex <<- paramIndex + 1
+
+        # Store updated value
+        called[[key]]$value <- req$params[[key]]
+
+        if (!is.null(err)) {
+          called[[key]]$error <- err
+          return(param(err))
+        }
+
+        if (is.null(fn)) {
+          return(param())
+        }
+
+        tryCatch(
+          expr = {
+            # called forward but it's a call to paramCallback
+            ret <- fn(req, res, paramVal, key, paramCallback)
+
+            if (isResponse(ret)) {
+              return(ret)
+            }
+
+            paramCallback()
+          },
+          error = function(e) paramCallback(e)
+        )
+      }
+
+      param()
+    }
   ),
   lock_objects = FALSE
 )
