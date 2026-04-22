@@ -130,6 +130,7 @@ Router <- R6::R6Class(
       # inter-router variables
       parentParams <- req$params
       parentUrl <- req$baseUrl %||% ""
+      done <- restore(callback, req, "params")
 
       # setup basic req values
       req$baseUrl <- parentUrl
@@ -169,12 +170,12 @@ Router <- R6::R6Class(
 
         # signal to exit router
         if (identical(layerError, "router")) {
-          return(callback(NULL))
+          return(done(NULL))
         }
 
         # no more matching layers
         if (idx > length(private$stack)) {
-          return(callback(layerError))
+          return(done(layerError))
         }
 
         path <- req$PATH_INFO
@@ -212,7 +213,7 @@ Router <- R6::R6Class(
 
         # no match
         if (!match) {
-          return(callback(layerError))
+          return(done(layerError))
         }
 
         # see: https://expressjs.com/en/5x/api.html#req.route
@@ -543,4 +544,21 @@ Router <- R6::R6Class(
 
 isRouter <- function(object) {
   inherits(object, "Router")
+}
+
+
+#' Restore obj elements after function
+#'
+#' @keywords internal
+#' @noRd
+restore <- function(fn, obj, ...) {
+  props <- c(...)
+  vals <- mget(props, envir = obj)
+
+  function(...) {
+    for (p in props) {
+      obj[[p]] <- vals[[p]]
+    }
+    fn(...)
+  }
 }
