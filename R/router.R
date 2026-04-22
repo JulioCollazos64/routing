@@ -553,7 +553,7 @@ isRouter <- function(object) {
 #' @noRd
 restore <- function(fn, obj, ...) {
   props <- c(...)
-  vals <- mget(props, envir = obj)
+  vals <- mget(props, envir = obj, ifnotfound = list(NULL))
 
   function(...) {
     for (p in props) {
