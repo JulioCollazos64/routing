@@ -11,7 +11,7 @@ httpMethods <- c(
 )
 
 isPromise <- function(x) {
-  inherits(x, what = c("promise", "future", "mirai"))
+  inherits(x, what = c("promise", "Future", "mirai"))
 }
 
 `%||%` <- function(x, y) {
