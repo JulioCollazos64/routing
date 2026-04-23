@@ -1,3 +1,7 @@
+#' @import R6
+#' @import promises
+NULL
+
 httpMethods <- c(
   "get",
   "head",

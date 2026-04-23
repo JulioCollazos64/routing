@@ -1,7 +1,28 @@
 #' @title Final Handler
 #'
 #' @description
-#' Automatically manages unhandled errors and requests (404).
+#' Returns a `function(err)` to be used as the `callback` argument of
+#' [Router]`$handle()`. It is invoked when the router exhausts its stack
+#' without sending a response, or when an unhandled occurs.
+#'
+#' ## Behaviour
+#'
+#' * **No error** and no response sent -- writes a `404 Not Found` HTML
+#'   response. The body message is `"Cannot <METHOD> <PATH_INFO>"`.
+#' * **Error** -- derives the HTTP status from `err$status` (must be a
+#'   numeric 4xx or 5xx value); falls back to `res$status`, and then to
+#'   `500`. The body contains the standard HTTP phrase for the status code.
+#'
+#' In all cases the response is an HTML document and includes the security
+#' headers `Content-Security-Policy: default-src 'none'` and
+#' `X-Content-Type-Options: nosniff`. Pre-existing `Content-Encoding`,
+#' `Content-Language`, and `Content-Range` headers are removed.
+#'
+#' @param req (`environment`)\cr Rook request environment.
+#' @param res (`Response`)\cr Response object.
+#' @param options (`list`)\cr Reserved for future use; currently ignored.
+#'
+#' @return A `function(err)` that sends the final HTTP response.
 #'
 #' @export
 finalHandler <- function(req, res, options) {

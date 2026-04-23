@@ -60,16 +60,38 @@ router$get(
   }
 )
 
-router$post("/bye", \(req, res) {
+router$post("/bye", function(req, res) {
   res$send("Bye!")
 })
 
-router$route("/hi")$get(\(req, res) {
+router$route("/hi")$get(function(req, res) {
   res$send("handling a GET request!")
-})$post(\(req, res) {
+})$post(function(req, res) {
   res$send("handling a POST request!")
 })
 
+router$get(
+  c("/path", "/another-path"),
+  function(req, res) {
+    res$send("Hola!")
+  }
+)
+
+## ------------------------------------------------
+## Method `Router$param`
+## ------------------------------------------------
+
+router <- Router$new()
+
+router$param("id", function(req, res, value, name) {
+  user <- findUser(value)
+  req$user <- list(id = value, name = user$name)
+  forward()
+})
+
+router$get("/user/:id", function(req, res) {
+  res$send(paste("user:", req$user$name))
+})
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -78,6 +100,7 @@ router$route("/hi")$get(\(req, res) {
 \item \href{#method-Router-handle}{\code{Router$handle()}}
 \item \href{#method-Router-use}{\code{Router$use()}}
 \item \href{#method-Router-route}{\code{Router$route()}}
+\item \href{#method-Router-param}{\code{Router$param()}}
 \item \href{#method-Router-getStack}{\code{Router$getStack()}}
 \item \href{#method-Router-clone}{\code{Router$clone()}}
 }
@@ -178,6 +201,54 @@ Creates a new \code{Route} for \code{path} and appends it to the stack.
 \subsection{Returns}{
 The new \code{Route} invisibly.
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Router-param"></a>}}
+\if{latex}{\out{\hypertarget{method-Router-param}{}}}
+\subsection{Method \code{param()}}{
+Registers a callback triggered whenever a named route parameter is
+present in a matched route. The callback runs before the route handler.
+
+The callback signature is \verb{function(req, res, value, name)}:
+\itemize{
+\item \code{value} -- the captured value of the parameter.
+\item \code{name}  -- the parameter name (character).
+}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Router$param(name, fn)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{(\code{character(1)})\cr Name of the route parameter to watch.}
+
+\item{\code{fn}}{(\code{function})\cr
+Callback with signature \verb{function(req, res, value, name)}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{self} invisibly.
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{router <- Router$new()
+
+router$param("id", function(req, res, value, name) {
+  user <- findUser(value)
+  req$user <- list(id = value, name = user$name)
+  forward()
+})
+
+router$get("/user/:id", function(req, res) {
+  res$send(paste("user:", req$user$name))
+})
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-getStack"></a>}}

@@ -55,19 +55,19 @@
 #'   }
 #' )
 #'
-#' router$post("/bye", \(req, res) {
+#' router$post("/bye", function(req, res) {
 #'   res$send("Bye!")
 #' })
 #'
-#' router$route("/hi")$get(\(req, res) {
+#' router$route("/hi")$get(function(req, res) {
 #'   res$send("handling a GET request!")
-#' })$post(\(req, res) {
+#' })$post(function(req, res) {
 #'   res$send("handling a POST request!")
 #' })
 #'
 #' router$get(
 #'   c("/path", "/another-path"),
-#'   \(req, res) {
+#'   function(req, res) {
 #'     res$send("Hola!")
 #'   }
 #' )
@@ -409,13 +409,13 @@ Router <- R6::R6Class(
     #' @examples
     #' router <- Router$new()
     #'
-    #' router$param("id", \(req, res, value, name) {
+    #' router$param("id", function(req, res, value, name) {
     #'   user <- findUser(value)
     #'   req$user <- list(id = value, name = user$name)
     #'   forward()
     #' })
     #'
-    #' router$get("/user/:id", \(req, res) {
+    #' router$get("/user/:id", function(req, res) {
     #'   res$send(paste("user:", req$user$name))
     #' })
     param = function(name, fn) {
@@ -588,5 +588,5 @@ mergeParams <- function(params, parent) {
     return(params)
   }
 
-  modifyList(parent, params)
+  utils::modifyList(parent, params)
 }

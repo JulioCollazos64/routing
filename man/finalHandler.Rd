@@ -6,6 +6,32 @@
 \usage{
 finalHandler(req, res, options)
 }
+\arguments{
+\item{req}{(\code{environment})\cr Rook request environment.}
+
+\item{res}{(\code{Response})\cr Response object.}
+
+\item{options}{(\code{list})\cr Reserved for future use; currently ignored.}
+}
+\value{
+A \verb{function(err)} that sends the final HTTP response.
+}
 \description{
-Automatically manages unhandled errors and requests (404).
+Returns a \verb{function(err)} to be used as the \code{callback} argument of
+\link{Router}\verb{$handle()}. It is invoked when the router exhausts its stack
+without sending a response, or when an unhandled occurs.
+\subsection{Behaviour}{
+\itemize{
+\item \strong{No error} and no response sent -- writes a \verb{404 Not Found} HTML
+response. The body message is \code{"Cannot <METHOD> <PATH_INFO>"}.
+\item \strong{Error} -- derives the HTTP status from \code{err$status} (must be a
+numeric 4xx or 5xx value); falls back to \code{res$status}, and then to
+\code{500}. The body contains the standard HTTP phrase for the status code.
+}
+
+In all cases the response is an HTML document and includes the security
+headers \verb{Content-Security-Policy: default-src 'none'} and
+\code{X-Content-Type-Options: nosniff}. Pre-existing \code{Content-Encoding},
+\code{Content-Language}, and \code{Content-Range} headers are removed.
+}
 }
