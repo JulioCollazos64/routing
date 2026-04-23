@@ -25,3 +25,5 @@ Suggests:
     testthat (>= 3.0.0),
     yyjsonr
 Config/testthat/edition: 3
+URL: https://github.com/JulioCollazos64/routing
+BugReports: https://github.com/JulioCollazos64/routing/issues
