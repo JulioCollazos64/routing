@@ -1,5 +1,5 @@
 Package: routing
-Title: Express.js like routing for R web frameworks
+Title: 'Express.js' Like Routing for R Web Frameworks
 Version: 1.0.0
 Authors@R: c(
     person("Julio", "Collazos", , "amarullazo626@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0009-0006-5503-0997")),
@@ -7,7 +7,7 @@ Authors@R: c(
            comment = "router contributors; authors listed in <https://github.com/pillarjs/router/graphs/contributors>")
    )
 Description: It aims to provide R web frameworks a routing mechanism of HTTP 
- requests inspired by the battle tested 'Express.js' library.
+ requests inspired by the battle tested 'Express.js' web framework.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, r6 = TRUE)
