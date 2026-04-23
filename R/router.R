@@ -142,10 +142,11 @@ Router <- R6::R6Class(
           on.exit,
           list(
             substitute({
+              .rv <- returnValue()
               return(
                 structure(
-                  returnValue() %||% list(),
-                  class = "forward"
+                  .rv %||% list(),
+                  class = c(class(.rv), "forward")
                 )
               )
             })
@@ -525,6 +526,20 @@ Router <- R6::R6Class(
           expr = {
             # called forward but it's a call to paramCallback
             ret <- fn(req, res, paramVal, key, paramCallback)
+
+            if (isPromise(ret)) {
+              return(
+                promises::then(
+                  ret,
+                  onFulfilled = function(response) {
+                    response
+                  },
+                  onRejected = function(err) {
+                    paramCallback(err %||% simpleError("Rejected promise"))
+                  }
+                )
+              )
+            }
 
             if (isResponse(ret)) {
               return(ret)

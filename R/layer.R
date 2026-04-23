@@ -27,7 +27,23 @@ Layer <- R6::R6Class(
 
       tryCatch(
         expr = {
-          fn(error, req, res, forward)
+          ret <- fn(error, req, res, forward)
+
+          if (isPromise(ret)) {
+            return(
+              promises::then(
+                ret,
+                onFulfilled = function(response) {
+                  response
+                },
+                onRejected = function(err) {
+                  forward(err %||% simpleError("Rejected promise"))
+                }
+              )
+            )
+          }
+
+          ret
         },
         error = function(err) {
           forward(err)
@@ -44,6 +60,20 @@ Layer <- R6::R6Class(
       tryCatch(
         expr = {
           ret <- fn(req, res, forward)
+
+          if (isPromise(ret)) {
+            return(
+              promises::then(
+                ret,
+                onFulfilled = function(response) {
+                  response
+                },
+                onRejected = function(err) {
+                  forward(err %||% simpleError("Rejected promise"))
+                }
+              )
+            )
+          }
 
           if (isResponse(ret) || inherits(ret, "forward")) {
             return(ret)

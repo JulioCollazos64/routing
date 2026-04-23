@@ -12,6 +12,7 @@ RoxygenNote: 7.3.3
 Imports: 
     httpcode,
     pater,
+    promises,
     R6
 Suggests:
     curl,
