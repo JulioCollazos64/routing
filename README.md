@@ -25,10 +25,10 @@ Let’s look at an example:
 ``` r
 library(routing)
 router <- Router$new()
-router$use(function(req,res){
+router$use(function(req, res) {
   print(req)
 })
-router$get("/hello", function(req,res){
+router$get("/hello", function(req, res) {
   res$send("Hello world!")
 })
 ```
@@ -47,6 +47,140 @@ things that matter from this code snippet:
 
 Moreover, the routing mechanism happens in the *same order you write
 your code* so you can read how your request goes from top to bottom.
+
+## Usage in Web Frameworks:
+
+You can get pretty far by using only `routing` for your web development
+projects. In the following example, we have a router with only one route
+and two handlers, half of the time a **call** to this **app** returns
+“HEADS” and the other half returns “TAILS” depending on the value of
+`runif(1)`
+
+``` r
+library(routing)
+router <- Router$new()
+
+router$get(
+  "/",
+  function(req, res) {
+    if (runif(1) < .5) {
+      return(forward())
+    }
+
+    list(
+      status = 200L,
+      headers = list(
+        "Content-Type" = "text/html"
+      ),
+      body = "HEADS"
+    )
+  },
+  function(req, res) {
+    list(
+      status = 200L,
+      headers = list(
+        "Content-Type" = "text/html"
+      ),
+      body = "TAILS"
+    )
+  }
+)
+
+
+responses <- vector(mode = "character", length = 1000)
+for (i in seq_len(1000)) {
+  request <- fiery::fake_request("http://your-next-project.com/")
+  response <- router$handle(request)
+  responses <- c(responses, response$body)
+}
+
+
+table(responses)
+#> responses
+#>       HEADS TAILS 
+#>  1000   520   480
+```
+
+`routing` is meant to be used in pair with `httpuv` as such we can
+translate our boilerplate code into a real application with minimal
+effort:
+
+``` r
+server <- httpuv::startServer(
+  "0.0.0.0",
+  8080,
+  list(
+    call = function(req) {
+      router$handle(req)
+    }
+  )
+)
+```
+
+Now visit <http://localhost:8080/> and see your web application in
+action. That’s all it takes to include to include `routing` in your R
+web framework! Now you have request parameters support through
+[pater](https://github.com/JulioCollazos64/pater) and all the features
+of Express routing.
+
+### Create a Response Class
+
+However, as you may have noticed already we had to manually specify our
+server response using `list()`, which is error-prone and time consuming.
+Moreover, we lack common needs such as response serialization to json.
+
+We need a better way of dealing with this. That’s why it’s advisable to
+create a response object at the start of your app call, here we provide
+a minimal response class but you can easily imagine one with more
+features.
+
+``` r
+Response <- R6::R6Class(
+  "Response",
+  public = list(
+    status = NULL,
+    headers = list(),
+    send = function(body = NULL) {
+      list(
+        status = self$status,
+        headers = self$headers,
+        body = body
+      )
+    }
+  )
+)
+```
+
+In order to pass this object through the router stack we will assign it
+to our Router handle method: `router$handle(req, Response$new())`
+
+Our handlers now can call the send method from the response class,
+saving a few keystrokes.
+
+### Use the default “catch” everything handler
+
+If in our application we were to visit <http://localhost:8080/api> we
+won’t get any response back from the server as we didn’t define a route
+for that path. For this cases it’s better to play safe and return a
+generic response saying that resource in our server couldn’t be found.
+As it’s such a common need `routing` provides this fallback
+automatically through the `finalHandler` function which catches any
+unhandled request.
+
+Out final application would look like:
+
+``` r
+server <- httpuv::startServer(
+  "0.0.0.0",
+  8080,
+  list(
+    call = function(req) {
+      res <- Response$new()
+      router$handle(req, res, finalHandler(req, res))
+    }
+  )
+)
+```
 
 ## How it differs from Express.js
 
