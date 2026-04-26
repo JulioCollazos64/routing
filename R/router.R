@@ -121,7 +121,7 @@ Router <- R6::R6Class(
     #' @param res (`Response`)\cr Response object.
     #' @param callback (`function`)\cr
     #'   Called when no layer matched or an unhandled error occurred.
-    handle = function(req, res, callback) {
+    handle = function(req, res = NULL, callback = NULL) {
       idx <- 1
       removed <- ""
       slashAdded <- FALSE
