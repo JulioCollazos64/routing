@@ -9,7 +9,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "man/figures/README-",
-  out.width = "100%"
+  out.width = "100%",
+  warning = FALSE
 )
 ```
 
@@ -23,9 +24,9 @@ knitr::opts_chunk$set(
 
 
 ## Installation
-
+ 
 ```{r, eval=FALSE}
-pak::pak("JulioCollazos64/routing")
+remotes::install_github("JulioCollazos64/routing")
 ```
 
 Let's look at an example:
@@ -93,7 +94,7 @@ responses <- vector(mode = "character", length = 1000)
 for (i in seq_len(1000)) {
   request <- fiery::fake_request("http://your-next-project.com/")
   response <- router$handle(request)
-  responses <- c(responses, response$body)
+  responses[i] <- response$body
 }
 
 

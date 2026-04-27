@@ -17,7 +17,7 @@ are now available in R.
 ## Installation
 
 ``` r
-pak::pak("JulioCollazos64/routing")
+remotes::install_github("JulioCollazos64/routing")
 ```
 
 Let’s look at an example:
@@ -91,14 +91,14 @@ responses <- vector(mode = "character", length = 1000)
 for (i in seq_len(1000)) {
   request <- fiery::fake_request("http://your-next-project.com/")
   response <- router$handle(request)
-  responses <- c(responses, response$body)
+  responses[i] <- response$body
 }
 
 
 table(responses)
 #> responses
-#>       HEADS TAILS 
-#>  1000   520   480
+#> HEADS TAILS 
+#>   505   495
 ```
 
 `routing` is meant to be used in pair with `httpuv` as such we can
