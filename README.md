@@ -98,7 +98,7 @@ for (i in seq_len(1000)) {
 table(responses)
 #> responses
 #> HEADS TAILS 
-#>   505   495
+#>   493   507
 ```
 
 `routing` is meant to be used in pair with `httpuv` as such we can
@@ -181,6 +181,233 @@ server <- httpuv::startServer(
   )
 )
 ```
+
+## How a request goes through the Layer stack
+
+A Router in `routing` is a stack of routes, middlewares or other
+routers, conceptually each of them are a *Layer* of the stack, when a
+request comes in each Layer is checked *in the order they were added to
+the stack*, no ordering occurs. Whether a Layer matches or not a request
+depends not only on its current **matcher**, a function that determines
+whether theirs a mtach between the request PATH and the Layer path, but
+also on the previous Layers as **a Layer can modify the request PATH**.
+
+``` r
+router <- Router$new()
+router$get(
+  "/",
+  function(req, res) {
+    writeLines(
+      c("Handler for", req$PATH_INFO)
+    )
+
+    req$PATH_INFO <- "/foo"
+  }
+)
+
+router$get("/foo", function(req, res) {
+  list(
+    status = 200L,
+    body = "foo",
+    headers = list(
+      "Content-Type" = "text/html"
+    )
+  )
+})
+
+req <- fiery::fake_request("http://your-next-project/")
+
+router$handle(req)
+#> Handler for
+#> /
+#> $status
+#> [1] 200
+#> 
+#> $body
+#> [1] "foo"
+#> 
+#> $headers
+#> $headers$`Content-Type`
+#> [1] "text/html"
+#> 
+#> 
+#> attr(,"class")
+#> [1] "list"    "forward" "forward"
+```
+
+As you can see from this example the first route acted only as a
+middleware for *url-rewriting*, that’s why we say whether a Layer
+matches a given request depends on the previous Layers too.
+
+### A Layer matcher
+
+A Layer matcher is built with the help of `match` from the
+[pater](https://cran.r-project.org/web/packages/pater/index.html)
+package, it uses the path you passed to `$use()` or `$route` (or its
+HTTP verb shortcuts), contrary to Ambiorix this path isn’t appended to
+the “Router basepath”, let’s look at an example:
+
+``` r
+app <- Router$new()
+api <- Router$new()
+
+api$get(c("/users", "/usuarios"), function(req, res) {
+  list(
+    status = 200L,
+    body = "We've got many users!",
+    headers = list(
+      "Content-Type" = "text/html"
+    )
+  )
+})
+
+app$use("/api", api)
+
+req <- fiery::fake_request("http://your-next-project.com/api/users")
+app$handle(req)
+#> $status
+#> [1] 200
+#> 
+#> $body
+#> [1] "We've got many users!"
+#> 
+#> $headers
+#> $headers$`Content-Type`
+#> [1] "text/html"
+#> 
+#> 
+#> attr(,"class")
+#> [1] "list"    "forward" "forward"
+```
+
+We said previously that a Router can have another as a Layer, and each
+Layer have it’s own matcher based on the path you’ve actually written.
+So `app` Router has a Router `api` with a matcher for any request
+starting with “/api”
+
+Our route for “/users” and “/usuarios” as a Layer has its own matcher
+set to match any request that matches those paths, in case you’re
+wondering here are the actual regexes used to match the request PATH.
+
+``` r
+lapply(
+  api$getStack()[[1]]$matchers,
+  FUN = function(s) {
+    environment(s)$regex
+  }
+)
+#> [[1]]
+#> [1] "(?i)^(?:\\/users)(?:\\/$)?$"
+#> 
+#> [[2]]
+#> [1] "(?i)^(?:\\/usuarios)(?:\\/$)?$"
+```
+
+You can see from those regexes that neither of them actually matches the
+path “/api/users”, what happens internally to make these sort of regexes
+actually match is *strip/trim* the basePath of the Router to the request
+path, so that it goes from “/api/users” to “/users”, which actually
+matches.
+
+### Layers everywhere
+
+The design in Express routing is such that the concept of Layer is also
+used in the Route class, this make it possible write code like the
+following:
+
+``` r
+router <- Router$new()
+logger <- function(req, res) {
+  print(req$PATH_INFO)
+}
+
+router$get(
+  "/foo",
+  # route specific middleware
+  logger,
+  # route handler
+  function(req, res) {
+    list(
+      status = 200L,
+      body = "bar",
+      headers = list(
+        "Content-Type" = "text/html"
+      )
+    )
+  },
+  function(req, res) {
+    print("Never called")
+  }
+)
+
+layer <- router$getStack()[[1]]
+# A route's Layer stack
+layer$route$stack
+#> [[1]]
+#> <Layer>
+#>   Public:
+#>     clone: function (deep = FALSE) 
+#>     handleError: function (error, req, res, forward) 
+#>     handleRequest: function (req, res, forward) 
+#>     initialize: function (path, options, fn) 
+#>     keys: list
+#>     match: function (path) 
+#>     matchers: list
+#>     method: get
+#>     params: list
+#>     path: 
+#>     route: NULL
+#>     slash: FALSE
+#>   Private:
+#>     handler: function (req, res, forward) 
+#> 
+#> [[2]]
+#> <Layer>
+#>   Public:
+#>     clone: function (deep = FALSE) 
+#>     handleError: function (error, req, res, forward) 
+#>     handleRequest: function (req, res, forward) 
+#>     initialize: function (path, options, fn) 
+#>     keys: list
+#>     match: function (path) 
+#>     matchers: list
+#>     method: get
+#>     params: list
+#>     path: 
+#>     route: NULL
+#>     slash: FALSE
+#>   Private:
+#>     handler: function (req, res, forward) 
+#> 
+#> [[3]]
+#> <Layer>
+#>   Public:
+#>     clone: function (deep = FALSE) 
+#>     handleError: function (error, req, res, forward) 
+#>     handleRequest: function (req, res, forward) 
+#>     initialize: function (path, options, fn) 
+#>     keys: list
+#>     match: function (path) 
+#>     matchers: list
+#>     method: get
+#>     params: list
+#>     path: 
+#>     route: NULL
+#>     slash: FALSE
+#>   Private:
+#>     handler: function (req, res, forward)
+```
+
+So when a request comes to “/foo” it matches the first Router Layer,
+which happens to be a Route, then the route dispatch the request into
+its own stack of layers, which in turn process the request until one of
+them actually respond, in this case this happens at the second Layer.
+
+In summary, when we think of a Route Layer we see that it has its own
+way of handling the request instead of just being the `handlers` we just
+wrote it’s a method that dispatches the requests into their handlers.
+Just like a Router dispatches a request into a middleware, route or
+another Router.
 
 ## How it differs from Express.js
 
