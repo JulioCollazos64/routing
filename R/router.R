@@ -157,14 +157,14 @@ Router <- R6::R6Class(
         layerError <- if (identical(err, "route")) NULL else err
 
         if (slashAdded) {
-          req$PATH_INFO <<- gsub("^.", "", req$PATH_INFO)
+          req$PATH_INFO <- gsub("^.", "", req$PATH_INFO)
           slashAdded <<- FALSE
         }
 
         # restore altered req.url
         if (nzchar(removed)) {
-          req$baseUrl <<- parentUrl
-          req$PATH_INFO <<- paste0(removed, req$PATH_INFO)
+          req$baseUrl <- parentUrl
+          req$PATH_INFO <- paste0(removed, req$PATH_INFO)
 
           removed <<- ""
         }
@@ -274,16 +274,16 @@ Router <- R6::R6Class(
 
           # strip prefix from path
           removed <<- layerPath
-          req$PATH_INFO <<- substring(req$PATH_INFO, nchar(removed) + 1L)
+          req$PATH_INFO <- substring(req$PATH_INFO, nchar(removed) + 1L)
 
           # ensure leading slash
           if (!startsWith(req$PATH_INFO, "/")) {
-            req$PATH_INFO <<- paste0("/", req$PATH_INFO)
+            req$PATH_INFO <- paste0("/", req$PATH_INFO)
             slashAdded <<- TRUE
           }
 
           # update baseUrl (no trailing slash)
-          req$baseUrl <<- paste0(
+          req$baseUrl <- paste0(
             parentUrl,
             if (endsWith(removed, "/")) {
               substring(removed, 1L, nchar(removed) - 1L)
