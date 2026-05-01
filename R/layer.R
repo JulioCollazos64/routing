@@ -28,6 +28,10 @@ Layer <- R6::R6Class(
         expr = {
           ret <- fn(error, req, res, forward)
 
+          if (isResponse(ret)) {
+            return(ret)
+          }
+
           if (isPromise(ret)) {
             return(
               promises::then(
@@ -42,7 +46,7 @@ Layer <- R6::R6Class(
             )
           }
 
-          ret
+          forward(err)
         },
         error = function(err) {
           forward(err)
@@ -60,6 +64,10 @@ Layer <- R6::R6Class(
         expr = {
           ret <- fn(req, res, forward)
 
+          if (isResponse(ret)) {
+            return(ret)
+          }
+
           if (isPromise(ret)) {
             return(
               promises::then(
@@ -72,10 +80,6 @@ Layer <- R6::R6Class(
                 }
               )
             )
-          }
-
-          if (isResponse(ret) || inherits(ret, "forward")) {
-            return(ret)
           }
 
           forward()

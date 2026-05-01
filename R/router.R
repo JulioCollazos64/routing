@@ -137,23 +137,6 @@ Router <- R6::R6Class(
       req$originalUrl <- req$originalUrl %||% req$PATH_INFO
 
       forward <- function(err = NULL) {
-        # signal that handler called forward
-        do.call(
-          on.exit,
-          list(
-            substitute({
-              .rv <- returnValue()
-              return(
-                structure(
-                  .rv %||% list(),
-                  class = c(class(.rv), "forward")
-                )
-              )
-            })
-          ),
-          envir = parent.frame()
-        )
-
         layerError <- if (identical(err, "route")) NULL else err
 
         if (slashAdded) {
