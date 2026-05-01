@@ -146,6 +146,19 @@ describe("route", {
       r <- fetch(server, "/foo")
       expect_identical(r$status, 404L)
     })
+
+    it("should call forward() if handler empty", {
+      router <- Router$new()
+      route <- router$route("/")
+      route$get(\(req, res) {
+        "All good"
+      })
+
+      server <- createServer(router)
+      r <- fetch(server, "/")
+      expect_identical(r$status, 404L)
+      expect_true(grepl("Cannot GET /", r$body))
+    })
   })
 
   describe("$all(..fn)", {
@@ -393,6 +406,25 @@ describe("route", {
           "caught: ouch: boom!"
         )
       )
+    })
+
+    it("should call forward(err) when the error handler is empty", {
+      router <- Router$new()
+      router$get(
+        "/",
+        \(req, res) {
+          stop("Oh no!")
+        },
+        \(err, req, res) {
+          conditionMessage(err)
+        }
+      )
+
+      server <- createServer(router)
+      r <- fetch(server, "/")
+
+      expect_identical(r$status, 500L)
+      expect_true(grepl("Internal Server Error", r$body))
     })
   })
 
