@@ -73,9 +73,16 @@ saw <- function(req, res, forward) {
 }
 
 
+setsawBase <- function(num) {
+  name <- paste0("x-saw-base", num)
+  function(req, res, forward) {
+    res$headers[[name]] <- req$baseUrl
+  }
+}
+
 sawBase <- function(req, res, forward) {
   res$status <- 200L
-  res$body <- paste("saw", req$baseUrl)
+  res$send(paste("saw", req$baseUrl))
 }
 
 

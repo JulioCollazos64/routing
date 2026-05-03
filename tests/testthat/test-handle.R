@@ -389,6 +389,81 @@ describe("Router", {
     })
   })
 
+  describe("req$baseUrl", {
+    it("should contain the stripped path", {
+      router <- Router$new()
+      router$use("/foo", sawBase)
+
+      server <- createServer(router)
+      r <- fetch(server, "/foo/bar")
+
+      expect_identical(
+        list(
+          r$status,
+          r$body
+        ),
+        list(
+          200L,
+          "saw /foo"
+        )
+      )
+    })
+
+    it("should contain the stripped path from multiple levels", {
+      router1 <- Router$new()
+      router2 <- Router$new()
+
+      router1$use("/foo", router2)
+      router2$use("/bar", sawBase)
+
+      server <- createServer(router1)
+      r <- fetch(server, "/foo/bar/baz")
+
+      expect_identical(
+        list(
+          r$status,
+          r$body
+        ),
+        list(
+          200L,
+          "saw /foo/bar"
+        )
+      )
+    })
+
+    it("should be altered correctly", {
+      router <- Router$new()
+      sub1 <- Router$new()
+      sub2 <- Router$new()
+      sub3 <- Router$new()
+
+      sub3$get("/zed", setsawBase(1))
+
+      sub2$use("/baz", sub3)
+
+      sub1$use("/", setsawBase(2))
+
+      sub1$use("/bar", sub2)
+      sub1$use("/bar", setsawBase(3))
+
+      router$use(setsawBase(4))
+      router$use("/foo", sub1)
+      router$use(setsawBase(5))
+      router$use(hello_world)
+
+      server <- createServer(router)
+
+      r <- fetch(server, "/foo/bar/baz/zed")
+
+      expect_identical(r$status, 200L)
+      expect_identical(r$headers$`x-saw-base1`, "/foo/bar/baz")
+      expect_identical(r$headers$`x-saw-base2`, "/foo")
+      expect_identical(r$headers$`x-saw-base3`, "/foo/bar")
+      expect_identical(r$headers$`x-saw-base4`, "")
+      expect_identical(r$headers$`x-saw-base5`, "")
+    })
+  })
+
   describe("req$PATH_INFO", {
     it("should strip path from req$PATH_INFO", {
       router <- Router$new()
