@@ -425,6 +425,22 @@ Router <- R6::R6Class(
       invisible(self)
     },
     #' @description
+    #' Registers a directory of static files to be served at a given URL prefix.
+    #' Static files are served directly by httpuv's background I/O thread without
+    #' invoking R.
+    #' @param root (`character(1)`)\cr
+    #'   Local filesystem path to the directory containing the files to serve.
+    #' @param url (`character(1)`)\cr
+    #'   URL prefix at which the files will be available (e.g. `"/static"`).
+    #' @param ... Additional arguments passed to [httpuv::staticPath()].
+    #' @return `self` invisibly.
+    static = function(root, url, ...) {
+      stopifnot("Argument root should be a character" = is.character(root))
+      stopifnot("Argument url should be a character" = is.character(url))
+      private$statics[[url]] <- httpuv::staticPath(root, ...)
+      invisible(self)
+    },
+    #' @description
     #' Returns the internal layer stack.
     #' @return `list` of `Layer` objects.
     getStack = function() {
@@ -437,6 +453,7 @@ Router <- R6::R6Class(
     mergeParams = logical(0),
     strict = logical(0),
     params = list(),
+    statics = list(),
     processParams = function(params, layer, called, req, res, done) {
       keys <- layer$keys
 

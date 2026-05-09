@@ -101,6 +101,7 @@ router$get("/user/:id", function(req, res) {
 \item \href{#method-Router-use}{\code{Router$use()}}
 \item \href{#method-Router-route}{\code{Router$route()}}
 \item \href{#method-Router-param}{\code{Router$param()}}
+\item \href{#method-Router-static}{\code{Router$static()}}
 \item \href{#method-Router-getStack}{\code{Router$getStack()}}
 \item \href{#method-Router-clone}{\code{Router$clone()}}
 }
@@ -142,7 +143,7 @@ A new \code{Router} object.
 Dispatches a request through the router's layer stack. Normally called
 by a server or a parent router rather than directly.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$handle(req, res, callback)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Router$handle(req, res = NULL, callback = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -249,6 +250,34 @@ router$get("/user/:id", function(req, res) {
 
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Router-static"></a>}}
+\if{latex}{\out{\hypertarget{method-Router-static}{}}}
+\subsection{Method \code{static()}}{
+Registers a directory of static files to be served at a given URL prefix.
+Static files are served directly by httpuv's background I/O thread without
+invoking R.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Router$static(root, url, ...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{root}}{(\code{character(1)})\cr
+Local filesystem path to the directory containing the files to serve.}
+
+\item{\code{url}}{(\code{character(1)})\cr
+URL prefix at which the files will be available (e.g. \code{"/static"}).}
+
+\item{\code{...}}{Additional arguments passed to \code{\link[httpuv:staticPath]{httpuv::staticPath()}}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{self} invisibly.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-getStack"></a>}}

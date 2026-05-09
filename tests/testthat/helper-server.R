@@ -16,28 +16,42 @@ Response <- R6::R6Class(
 
 
 createServer <- function(handler) {
+  # private fields are accessible through inheritance, so
+  # any other web framework doesn't have to go through all
+  # of this, using inherit = routing::Router will suffice.
+  # see: https://github.com/r-lib/R6/issues/41
+
+  statics <- NULL
+  if (isRouter(handler)) {
+    statics <- handler$.__enclos_env__$private$statics
+    routing <- function(req, res) {
+      handler$handle(req, res, callback = finalHandler(req, res))
+    }
+  } else {
+    routing <- handler
+  }
+
   httpuv::startServer(
     "127.0.0.1",
     httpuv::randomPort(),
     list(
       call = function(req) {
         res <- Response$new()
-
-        if (isRouter(handler)) {
-          handler$handle(req, res, callback = finalHandler(req, res))
-        } else {
-          handler(req, res)
-        }
-      }
+        routing(req, res)
+      },
+      staticPaths = statics
     )
   )
 }
 
 # adapted from https://github.com/rstudio/httpuv/blob/main/tests/testthat/helper-app.R
 # with assistance from Claude
-fetch <- function(server, path, method = "GET") {
+fetch <- function(server, path, method = "GET", headers = NULL) {
   url <- paste0("http://127.0.0.1:", server$getPort(), path)
   handle <- curl::new_handle(customrequest = toupper(method))
+  if (!is.null(headers)) {
+    curl::handle_setheaders(handle, .list = headers)
+  }
   pool <- curl::new_pool()
   result <- NULL
   error <- NULL
@@ -151,4 +165,9 @@ sawParams <- function(req, res) {
   res$status <- 200L
   res$headers[["Content-Type"]] <- "application/json"
   res$send(yyjsonr::write_json_str(req$params))
+}
+
+raw_file_content <- function(filename) {
+  size <- file.info(filename)$size
+  readBin(filename, "raw", n = size)
 }
