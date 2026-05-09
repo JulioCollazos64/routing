@@ -19,8 +19,8 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
+`routing` is an R port of [pillarjs/router](https://github.com/pillarjs/router), the routing mechanism that underpins Express.js. It gives R web frameworks a syntax that mimics how Express.js applications are written, so the same patterns that make Express.js applications easy to read and reason about are now available in R. 
 
-`routing` is an R port of [pillarjs/router](https://github.com/pillarjs/router), the routing mechanism that underpins Express.js. It gives R web frameworks a syntax that mimics how Express.js applications are written, so the same patterns that make Express.js applications easy to read and reason about are now available in R.
 
 
 ## Installation

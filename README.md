@@ -98,7 +98,7 @@ for (i in seq_len(1000)) {
 table(responses)
 #> responses
 #> HEADS TAILS 
-#>   493   507
+#>   519   481
 ```
 
 `routing` is meant to be used in pair with `httpuv` as such we can
@@ -229,10 +229,6 @@ router$handle(req)
 #> $headers
 #> $headers$`Content-Type`
 #> [1] "text/html"
-#> 
-#> 
-#> attr(,"class")
-#> [1] "list"    "forward" "forward"
 ```
 
 As you can see from this example the first route acted only as a
@@ -274,10 +270,6 @@ app$handle(req)
 #> $headers
 #> $headers$`Content-Type`
 #> [1] "text/html"
-#> 
-#> 
-#> attr(,"class")
-#> [1] "list"    "forward" "forward"
 ```
 
 We said previously that a Router can have another as a Layer, and each

@@ -1,6 +1,6 @@
 Package: routing
 Title: 'Express.js' Like Routing for R Web Frameworks
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: c(
     person("Julio", "Collazos", , "amarullazo626@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0009-0006-5503-0997")),
     person(,"router contributors", role = c("ctb","cph"),
