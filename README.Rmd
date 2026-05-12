@@ -116,7 +116,7 @@ server <- httpuv::startServer(
 )
 ```
 
-Now visit <http://localhost:8080/> and see your web application in action. That's all
+Now visit http://0.0.0.0:8080/ and see your web application in action. That's all
 it takes to include to include `routing` in your R web framework! Now you have
 request parameters support through [pater](https://github.com/JulioCollazos64/pater) and all
 the features of Express routing.
@@ -157,7 +157,7 @@ keystrokes.
 
 ### Use the default "catch" everything handler
 
-If in our application we were to visit http://localhost:8080/api we won't get
+If in our application we were to visit http://0.0.0.0:8080/api we won't get
 any response back from the server as we didn't define a route for that path. For
 this cases it's better to play safe and return a generic response saying
 that resource in our server couldn't be found. As it's such a common need

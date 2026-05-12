@@ -98,7 +98,7 @@ for (i in seq_len(1000)) {
 table(responses)
 #> responses
 #> HEADS TAILS 
-#>   519   481
+#>   499   501
 ```
 
 `routing` is meant to be used in pair with `httpuv` as such we can
@@ -117,9 +117,9 @@ server <- httpuv::startServer(
 )
 ```
 
-Now visit <http://localhost:8080/> and see your web application in
-action. That’s all it takes to include to include `routing` in your R
-web framework! Now you have request parameters support through
+Now visit http://0.0.0.0:8080/ and see your web application in action.
+That’s all it takes to include to include `routing` in your R web
+framework! Now you have request parameters support through
 [pater](https://github.com/JulioCollazos64/pater) and all the features
 of Express routing.
 
@@ -159,7 +159,7 @@ saving a few keystrokes.
 
 ### Use the default “catch” everything handler
 
-If in our application we were to visit <http://localhost:8080/api> we
+If in our application we were to visit http://0.0.0.0:8080/api we
 won’t get any response back from the server as we didn’t define a route
 for that path. For this cases it’s better to play safe and return a
 generic response saying that resource in our server couldn’t be found.
@@ -238,7 +238,7 @@ matches a given request depends on the previous Layers too.
 ### A Layer matcher
 
 A Layer matcher is built with the help of `match` from the
-[pater](https://cran.r-project.org/web/packages/pater/index.html)
+[pater](https://cran.r-project.org/package=pater)
 package, it uses the path you passed to `$use()` or `$route` (or its
 HTTP verb shortcuts), contrary to Ambiorix this path isn’t appended to
 the “Router basepath”, let’s look at an example:
