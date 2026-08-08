@@ -19,9 +19,7 @@ Imports:
     R6,
     utils
 Suggests:
-    curl,
-    httpuv,
-    later,
+    mochita,
     testthat (>= 3.0.0),
     yyjsonr
 Config/testthat/edition: 3

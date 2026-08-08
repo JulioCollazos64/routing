@@ -14,69 +14,22 @@ Response <- R6::R6Class(
   )
 )
 
-
-createServer <- function(handler) {
-  # private fields are accessible through inheritance, so
-  # any other web framework doesn't have to go through all
-  # of this, using inherit = routing::Router will suffice.
-  # see: https://github.com/r-lib/R6/issues/41
-
-  statics <- NULL
-  if (isRouter(handler)) {
-    statics <- handler$.__enclos_env__$private$statics
-    routing <- function(req, res) {
-      handler$handle(req, res, callback = finalHandler(req, res))
-    }
-  } else {
-    routing <- handler
+createServer <- function(router) {
+  if (!isRouter(router)) {
+    handler <- router
   }
 
-  httpuv::startServer(
-    "127.0.0.1",
-    httpuv::randomPort(),
-    list(
-      call = function(req) {
-        res <- Response$new()
-        routing(req, res)
-      },
-      staticPaths = statics
-    )
-  )
-}
-
-# adapted from https://github.com/rstudio/httpuv/blob/main/tests/testthat/helper-app.R
-# with assistance from Claude
-fetch <- function(server, path, method = "GET", headers = NULL) {
-  url <- paste0("http://127.0.0.1:", server$getPort(), path)
-  handle <- curl::new_handle(customrequest = toupper(method))
-  if (!is.null(headers)) {
-    curl::handle_setheaders(handle, .list = headers)
-  }
-  pool <- curl::new_pool()
-  result <- NULL
-  error <- NULL
-
-  curl::curl_fetch_multi(
-    url,
-    done = function(r) result <<- r,
-    fail = function(e) error <<- e,
-    handle = handle,
-    pool = pool
-  )
-
-  while (is.null(result) && is.null(error)) {
-    later::run_now(0)
-    curl::multi_run(timeout = 0.01, pool = pool)
+  staticsPaths <- router$.__enclos_env__$private$statics
+  handler <- function(req, res, callback) {
+    router$handle(req, res, callback)
   }
 
-  if (!is.null(error)) {
-    stop(error)
-  }
-
+  res <- Response$new()
   list(
-    status = result$status_code,
-    body = rawToChar(result$content),
-    headers = curl::parse_headers_list(result$headers)
+    call = function(req) {
+      handler(req, res, finalHandler(req, res))
+    },
+    staticPaths = staticsPaths %||% NULL
   )
 }
 
