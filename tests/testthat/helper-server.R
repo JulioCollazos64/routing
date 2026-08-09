@@ -15,22 +15,26 @@ Response <- R6::R6Class(
 )
 
 createServer <- function(router) {
-  if (!isRouter(router)) {
-    handler <- router
+  build <- function(handler, staticsPaths) {
+    list(
+      call = function(req) {
+        res <- Response$new()
+        handler(req, res, finalHandler(req, res))
+      },
+      staticsPaths = staticsPaths
+    )
   }
 
-  staticsPaths <- router$.__enclos_env__$private$statics
+  if (!isRouter(router)) {
+    return(build(router, NULL))
+  }
+
   handler <- function(req, res, callback) {
     router$handle(req, res, callback)
   }
+  staticPaths <- router$.__enclos_env__$private$statics
 
-  list(
-    call = function(req) {
-      res <- Response$new()
-      handler(req, res, finalHandler(req, res))
-    },
-    staticPaths = staticsPaths %||% NULL
-  )
+  build(handler, staticPaths)
 }
 
 saw <- function(req, res, forward) {
@@ -114,6 +118,9 @@ sendParams <- function(req, res) {
 hitParams <- function(num) {
   name <- paste0("x-params-", num)
   function(req, res) {
+    if (!length(req$params)) {
+      names(req$params) <- character()
+    }
     res$headers[[name]] <- yyjsonr::write_json_str(req$params)
     forward()
   }
@@ -122,6 +129,11 @@ hitParams <- function(num) {
 sawParams <- function(req, res) {
   res$status <- 200L
   res$headers[["Content-Type"]] <- "application/json"
+
+  if (!length(req$params)) {
+    names(req$params) <- character()
+  }
+
   res$send(yyjsonr::write_json_str(req$params))
 }
 
