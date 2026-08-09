@@ -123,7 +123,10 @@ hitParams <- function(num) {
     }
     res$headers[[name]] <- yyjsonr::write_json_str(
       req$params,
-      opts = yyjsonr::opts_write_json(auto_unbox = TRUE)
+      opts = yyjsonr::opts_write_json(
+        auto_unbox = TRUE,
+        digits = 0
+      )
     )
     forward()
   }
@@ -139,7 +142,10 @@ sawParams <- function(req, res) {
 
   res$send(yyjsonr::write_json_str(
     req$params,
-    opts = yyjsonr::opts_write_json(auto_unbox = TRUE)
+    opts = yyjsonr::opts_write_json(
+      auto_unbox = TRUE,
+      digits = 0
+    )
   ))
 }
 
