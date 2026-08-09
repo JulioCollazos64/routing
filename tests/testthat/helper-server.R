@@ -121,7 +121,10 @@ hitParams <- function(num) {
     if (!length(req$params)) {
       names(req$params) <- character()
     }
-    res$headers[[name]] <- yyjsonr::write_json_str(req$params)
+    res$headers[[name]] <- yyjsonr::write_json_str(
+      req$params,
+      opts = yyjsonr::opts_write_json(auto_unbox = TRUE)
+    )
     forward()
   }
 }
@@ -134,7 +137,10 @@ sawParams <- function(req, res) {
     names(req$params) <- character()
   }
 
-  res$send(yyjsonr::write_json_str(req$params))
+  res$send(yyjsonr::write_json_str(
+    req$params,
+    opts = yyjsonr::opts_write_json(auto_unbox = TRUE)
+  ))
 }
 
 raw_file_content <- function(filename) {
