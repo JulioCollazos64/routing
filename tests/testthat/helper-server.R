@@ -108,6 +108,9 @@ saw <- function(req, res) {
 sendParams <- function(req, res) {
   res$status <- 200L
 
+  if (!length(req$params)) {
+    names(req$params) <- character()
+  }
   params <- yyjsonr::write_json_str(
     req$params,
     opts = yyjsonr::opts_write_json(
