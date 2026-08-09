@@ -107,9 +107,13 @@ saw <- function(req, res) {
 
 sendParams <- function(req, res) {
   res$status <- 200L
-  params <- paste0(
-    sprintf("%s:%s", names(req$params), req$params),
-    collapse = "-"
+
+  params <- yyjsonr::write_json_str(
+    req$params,
+    opts = yyjsonr::opts_write_json(
+      auto_unbox = TRUE,
+      digits = 0
+    )
   )
 
   res$send(params)
