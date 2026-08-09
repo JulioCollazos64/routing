@@ -46,7 +46,9 @@ Route <- R6::R6Class(
         return(done())
       }
 
-      method <- tolower(req$REQUEST_METHOD)
+      method <- req$REQUEST_METHOD
+      method <- if (is.character(method)) tolower(method) else method
+
       req$route <- self
 
       forward <- function(err = NULL) {
@@ -66,7 +68,7 @@ Route <- R6::R6Class(
         while (!match && idx <= length(self$stack)) {
           layer <- self$stack[[idx]]
           idx <<- idx + 1
-          match <- is.null(layer$method) || layer$method == method
+          match <- is.null(layer$method) || identical(layer$method, method)
         }
 
         if (isFALSE(match)) {
@@ -82,9 +84,13 @@ Route <- R6::R6Class(
       forward()
     },
     handlesMethod = function(method) {
-      method <- tolower(method)
+      if (isTRUE(self$methods$all) || is.null(method)) {
+        return(TRUE)
+      }
 
-      if (isTRUE(self$methods$all) || isTRUE(self$methods[[method]])) {
+      method <- if (is.character(method)) tolower(method) else method
+
+      if (isTRUE(self$methods[[method]])) {
         return(TRUE)
       }
 
