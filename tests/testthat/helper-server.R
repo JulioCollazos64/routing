@@ -24,9 +24,9 @@ createServer <- function(router) {
     router$handle(req, res, callback)
   }
 
-  res <- Response$new()
   list(
     call = function(req) {
+      res <- Response$new()
       handler(req, res, finalHandler(req, res))
     },
     staticPaths = staticsPaths %||% NULL
@@ -53,13 +53,13 @@ sawBase <- function(req, res, forward) {
 }
 
 
-hello_world <- function(req, res, forward) {
+helloWorld <- function(req, res, forward) {
   res$status <- 200L
   res$send("hello, world")
 }
 
 
-create_hit_handle <- function(num) {
+createHitHandle <- function(num) {
   name <- paste0("x-fn-", num)
   function(req, res, forward) {
     res$headers[[name]] <- "hit"
@@ -67,19 +67,24 @@ create_hit_handle <- function(num) {
   }
 }
 
-should_hit_handle <- function(r, num) {
-  expect_equal(
-    r$headers[[paste0("x-fn-", num)]],
-    "hit",
-    label = paste("handle", num, "should be hit")
-  )
+shouldHitHandle <- function(num) {
+  header <- paste0("x-fn-", num)
+  function(r) {
+    expect_equal(
+      r$headers[[header]],
+      "hit",
+      label = paste("handle", num, "should be hit")
+    )
+  }
 }
 
-should_not_hit_handle <- function(r, num) {
-  expect_null(
-    r$headers[[paste0("x-fn-", num)]],
-    label = paste("handle", num, "should not be hit")
-  )
+shouldNotHitHandle <- function(num) {
+  header <- paste0("x-fn-", num)
+  function(r) {
+    expect_null(
+      r$headers[[header]]
+    )
+  }
 }
 
 setsaw <- function(num) {
