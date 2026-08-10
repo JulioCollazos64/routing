@@ -1,3 +1,5 @@
+library(mochita)
+
 Response <- R6::R6Class(
   "Response",
   public = list(
@@ -14,70 +16,27 @@ Response <- R6::R6Class(
   )
 )
 
-
-createServer <- function(handler) {
-  # private fields are accessible through inheritance, so
-  # any other web framework doesn't have to go through all
-  # of this, using inherit = routing::Router will suffice.
-  # see: https://github.com/r-lib/R6/issues/41
-
-  statics <- NULL
-  if (isRouter(handler)) {
-    statics <- handler$.__enclos_env__$private$statics
-    routing <- function(req, res) {
-      handler$handle(req, res, callback = finalHandler(req, res))
-    }
-  } else {
-    routing <- handler
-  }
-
-  httpuv::startServer(
-    "127.0.0.1",
-    httpuv::randomPort(),
+createServer <- function(router) {
+  build <- function(handler, staticsPaths) {
     list(
       call = function(req) {
         res <- Response$new()
-        routing(req, res)
+        handler(req, res, finalHandler(req, res))
       },
-      staticPaths = statics
+      staticPaths = staticsPaths
     )
-  )
-}
-
-# adapted from https://github.com/rstudio/httpuv/blob/main/tests/testthat/helper-app.R
-# with assistance from Claude
-fetch <- function(server, path, method = "GET", headers = NULL) {
-  url <- paste0("http://127.0.0.1:", server$getPort(), path)
-  handle <- curl::new_handle(customrequest = toupper(method))
-  if (!is.null(headers)) {
-    curl::handle_setheaders(handle, .list = headers)
-  }
-  pool <- curl::new_pool()
-  result <- NULL
-  error <- NULL
-
-  curl::curl_fetch_multi(
-    url,
-    done = function(r) result <<- r,
-    fail = function(e) error <<- e,
-    handle = handle,
-    pool = pool
-  )
-
-  while (is.null(result) && is.null(error)) {
-    later::run_now(0)
-    curl::multi_run(timeout = 0.01, pool = pool)
   }
 
-  if (!is.null(error)) {
-    stop(error)
+  if (!isRouter(router)) {
+    return(build(router, NULL))
   }
 
-  list(
-    status = result$status_code,
-    body = rawToChar(result$content),
-    headers = curl::parse_headers_list(result$headers)
-  )
+  handler <- function(req, res, callback) {
+    router$handle(req, res, callback)
+  }
+  staticPaths <- router$.__enclos_env__$private$statics
+
+  build(handler, staticPaths)
 }
 
 saw <- function(req, res, forward) {
@@ -100,13 +59,13 @@ sawBase <- function(req, res, forward) {
 }
 
 
-hello_world <- function(req, res, forward) {
+helloWorld <- function(req, res, forward) {
   res$status <- 200L
   res$send("hello, world")
 }
 
 
-create_hit_handle <- function(num) {
+createHitHandle <- function(num) {
   name <- paste0("x-fn-", num)
   function(req, res, forward) {
     res$headers[[name]] <- "hit"
@@ -114,19 +73,24 @@ create_hit_handle <- function(num) {
   }
 }
 
-should_hit_handle <- function(r, num) {
-  expect_equal(
-    r$headers[[paste0("x-fn-", num)]],
-    "hit",
-    label = paste("handle", num, "should be hit")
-  )
+shouldHitHandle <- function(num) {
+  header <- paste0("x-fn-", num)
+  function(r) {
+    expect_equal(
+      r$headers[[header]],
+      "hit",
+      label = paste("handle", num, "should be hit")
+    )
+  }
 }
 
-should_not_hit_handle <- function(r, num) {
-  expect_null(
-    r$headers[[paste0("x-fn-", num)]],
-    label = paste("handle", num, "should not be hit")
-  )
+shouldNotHitHandle <- function(num) {
+  header <- paste0("x-fn-", num)
+  function(r) {
+    expect_null(
+      r$headers[[header]]
+    )
+  }
 }
 
 setsaw <- function(num) {
@@ -145,9 +109,16 @@ saw <- function(req, res) {
 
 sendParams <- function(req, res) {
   res$status <- 200L
-  params <- paste0(
-    sprintf("%s:%s", names(req$params), req$params),
-    collapse = "-"
+
+  if (!length(req$params)) {
+    names(req$params) <- character()
+  }
+  params <- yyjsonr::write_json_str(
+    req$params,
+    opts = yyjsonr::opts_write_json(
+      auto_unbox = TRUE,
+      digits = 0
+    )
   )
 
   res$send(params)
@@ -156,7 +127,16 @@ sendParams <- function(req, res) {
 hitParams <- function(num) {
   name <- paste0("x-params-", num)
   function(req, res) {
-    res$headers[[name]] <- yyjsonr::write_json_str(req$params)
+    if (!length(req$params)) {
+      names(req$params) <- character()
+    }
+    res$headers[[name]] <- yyjsonr::write_json_str(
+      req$params,
+      opts = yyjsonr::opts_write_json(
+        auto_unbox = TRUE,
+        digits = 0
+      )
+    )
     forward()
   }
 }
@@ -164,7 +144,18 @@ hitParams <- function(num) {
 sawParams <- function(req, res) {
   res$status <- 200L
   res$headers[["Content-Type"]] <- "application/json"
-  res$send(yyjsonr::write_json_str(req$params))
+
+  if (!length(req$params)) {
+    names(req$params) <- character()
+  }
+
+  res$send(yyjsonr::write_json_str(
+    req$params,
+    opts = yyjsonr::opts_write_json(
+      auto_unbox = TRUE,
+      digits = 0
+    )
+  ))
 }
 
 raw_file_content <- function(filename) {

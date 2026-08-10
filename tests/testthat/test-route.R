@@ -1,10 +1,4 @@
 describe("route", {
-  on.exit(
-    {
-      httpuv::stopAllServers()
-    },
-    add = TRUE
-  )
   describe("$route(path)", {
     it("should return a new route", {
       router <- Router$new()
@@ -21,103 +15,89 @@ describe("route", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/foo")
+      request <- mochita(server)
 
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw GET /foo"
-        )
-      )
+      request$get("/foo")$expect(
+        200L,
+        "saw GET /foo"
+      )$perform()
 
-      r <- fetch(server, "/foo", method = "POST")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw POST /foo"
-        )
-      )
+      request$post("/foo")$expect(
+        200L,
+        "saw POST /foo"
+      )$perform()
 
-      r <- fetch(server, "/foo", method = "PUT")
-      expect_identical(r$status, 404L)
+      request$put("/foo")$expect(
+        404L
+      )$perform()
     })
 
-    # it("should route without method", {
-    #   router <- Router$new()
-    #   route <- router$route("/foo")
-    #   route$post(create_hit_handle(1))
-    #   route$all(create_hit_handle(2))
-    #   route$get(create_hit_handle(3))
+    it("should route without method", {
+      router <- Router$new()
+      route <- router$route("/foo")
+      route$post(createHitHandle(1))
+      route$all(createHitHandle(2))
+      route$get(createHitHandle(3))
 
-    #   router$get("/foo", create_hit_handle(4))
-    #   router$use(saw)
+      router$get("/foo", createHitHandle(4))
+      router$use(saw)
 
-    #   server <- createServer(router)
+      server <- createServer(
+        function(req, res, forward) {
+          req$REQUEST_METHOD <- NULL
+          router$handle(req, res, forward)
+        }
+      )
 
-    #   r <- fetch(server, "/foo")
-    #   r
-    # })
+      mochita(server)$get("/foo")$expect(
+        shouldNotHitHandle(1)
+      )$expect(
+        shouldHitHandle(2)
+      )$expect(
+        shouldNotHitHandle(3)
+      )$expect(
+        shouldNotHitHandle(4)
+      )$expect(
+        200L,
+        "saw  /foo"
+      )$perform()
+    })
 
     it("should stack", {
       router <- Router$new()
       route <- router$route("/foo")
-      route$post(create_hit_handle(1))
-      route$all(create_hit_handle(2))
-      route$get(create_hit_handle(3))
+      route$post(createHitHandle(1))
+      route$all(createHitHandle(2))
+      route$get(createHitHandle(3))
 
       router$use(saw)
 
       server <- createServer(router)
 
-      r <- fetch(server, "/foo")
+      mochita(server)$get("/foo")$expect(
+        shouldHitHandle(2)
+      )$expect(
+        shouldHitHandle(3)
+      )$expect(
+        200L,
+        "saw GET /foo"
+      )$perform()
 
-      should_hit_handle(r, 2)
-      should_hit_handle(r, 3)
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw GET /foo"
-        )
-      )
+      mochita(server)$post("/foo")$expect(
+        shouldHitHandle(1)
+      )$expect(
+        shouldHitHandle(2)
+      )$expect(
+        200L,
+        "saw POST /foo"
+      )$perform()
 
-      r <- fetch(server, "/foo", method = "POST")
-      should_hit_handle(r, 1)
-      should_hit_handle(r, 2)
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw POST /foo"
-        )
-      )
-
-      r <- fetch(server, "/foo", method = "PUT")
-      should_hit_handle(r, 2)
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw PUT /foo"
-        )
-      )
+      mochita(server)$put("/foo")$expect(
+        shouldHitHandle(2)
+      )$expect(
+        200L,
+        "saw PUT /foo"
+      )$perform()
     })
 
     it("should not error on  route", {
@@ -126,11 +106,9 @@ describe("route", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/foo")
-      expect_identical(r$status, 404L)
+      mochita(server)$get("/foo")$expect(404L)$perform()
 
-      r <- fetch(server, "/foo", method = "POST")
-      expect_identical(r$status, 404L)
+      mochita(server)$post("/foo")$expect(404L)$perform()
     })
 
     it("should not invoke singular error route", {
@@ -143,8 +121,7 @@ describe("route", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/foo")
-      expect_identical(r$status, 404L)
+      mochita(server)$get("/foo")$expect(404L)$perform()
     })
 
     it("should call forward() if handler empty", {
@@ -155,9 +132,15 @@ describe("route", {
       })
 
       server <- createServer(router)
-      r <- fetch(server, "/")
-      expect_identical(r$status, 404L)
-      expect_true(grepl("Cannot GET /", r$body))
+      mochita(server)$get("/")$expect(
+        404L
+      )$expect(
+        function(req) {
+          expect_true(
+            grepl("Cannot GET /", req$body)
+          )
+        }
+      )$perform()
     })
   })
 
@@ -195,67 +178,40 @@ describe("route", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/foo")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw GET /foo"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        200L,
+        "saw GET /foo"
+      )$perform()
 
-      r <- fetch(server, "/foo", method = "POST")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw POST /foo"
-        )
-      )
+      mochita(server)$post("/foo")$expect(
+        200L,
+        "saw POST /foo"
+      )$perform()
 
-      r <- fetch(server, "/foo", method = "PUT")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw PUT /foo"
-        )
-      )
+      mochita(server)$put("/foo")$expect(
+        200L,
+        "saw PUT /foo"
+      )$perform()
     })
 
     it("should accept multiple arguments", {
       router <- Router$new()
       route <- router$route("/foo")
       route$all(
-        create_hit_handle(1),
-        create_hit_handle(2),
-        hello_world
+        createHitHandle(1),
+        createHitHandle(2),
+        helloWorld
       )
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      should_hit_handle(r, 1)
-      should_hit_handle(r, 2)
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "hello, world"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        shouldHitHandle(1)
+      )$expect(
+        shouldHitHandle(2)
+      )$expect(
+        200L,
+        "hello, world"
+      )$perform()
     })
 
     it("should accept single list of handlers", {
@@ -263,27 +219,21 @@ describe("route", {
       route <- router$route("/foo")
       route$all(
         list(
-          create_hit_handle(1),
-          create_hit_handle(2),
-          hello_world
+          createHitHandle(1),
+          createHitHandle(2),
+          helloWorld
         )
       )
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      should_hit_handle(r, 1)
-      should_hit_handle(r, 2)
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "hello, world"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        shouldHitHandle(1)
+      )$expect(
+        shouldHitHandle(2)
+      )$expect(
+        200L,
+        "hello, world"
+      )$perform()
     })
 
     it("should accept nested lists of handlers", {
@@ -292,31 +242,25 @@ describe("route", {
       route$all(
         list(
           list(
-            create_hit_handle(1),
-            create_hit_handle(2)
+            createHitHandle(1),
+            createHitHandle(2)
           ),
-          create_hit_handle(3)
+          createHitHandle(3)
         ),
-        hello_world
+        helloWorld
       )
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      should_hit_handle(r, 1)
-      should_hit_handle(r, 2)
-      should_hit_handle(r, 3)
-
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "hello, world"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        shouldHitHandle(1)
+      )$expect(
+        shouldHitHandle(2)
+      )$expect(
+        shouldHitHandle(3)
+      )$expect(
+        200L,
+        "hello, world"
+      )$perform()
     })
   })
 
@@ -328,7 +272,7 @@ describe("route", {
       route$all(\(req, res) {
         forward(stop("Boom!"))
       })
-      route$all(hello_world)
+      route$all(helloWorld)
       route$all(\(err, req, res) {
         res$status <- 500L
         msg <- conditionMessage(err)
@@ -336,18 +280,10 @@ describe("route", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, "/foo")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          500L,
-          "Boom!"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        500L,
+        "Boom!"
+      )$perform()
     })
 
     it("should handle errors thrown", {
@@ -356,7 +292,7 @@ describe("route", {
       route$all(\(req, res) {
         stop("boom!")
       })
-      route$all(hello_world)
+      route$all(helloWorld)
       route$all(\(err, req, res) {
         res$status <- 500L
         msg <- conditionMessage(err)
@@ -364,19 +300,12 @@ describe("route", {
       })
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          500L,
-          "boom!"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        500L,
+        "boom!"
+      )$perform()
     })
+
     it("should handle errors thrown in error handlers", {
       router <- Router$new()
       route <- router$route("/foo")
@@ -394,18 +323,10 @@ describe("route", {
       })
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          500L,
-          "caught: ouch: boom!"
-        )
-      )
+      mochita(server)$get("/foo")$expect(
+        500L,
+        "caught: ouch: boom!"
+      )$perform()
     })
 
     it("should call forward(err) when the error handler is empty", {
@@ -421,10 +342,11 @@ describe("route", {
       )
 
       server <- createServer(router)
-      r <- fetch(server, "/")
-
-      expect_identical(r$status, 500L)
-      expect_true(grepl("Internal Server Error", r$body))
+      mochita(server)$get("/")$expect(500L)$expect(
+        function(res) {
+          expect_true(grepl("Internal Server Error", res$body))
+        }
+      )$perform()
     })
   })
 
@@ -439,23 +361,13 @@ describe("route", {
       router$use(saw)
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        r$headers$`x-next`,
+      mochita(server)$get("/foo")$expect(
+        "x-next",
         "route"
-      )
-
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw GET /foo"
-        )
-      )
+      )$expect(
+        200L,
+        "saw GET /foo"
+      )$perform()
     })
 
     it("should invoke next route", {
@@ -468,55 +380,38 @@ describe("route", {
       router$route("/foo")$all(saw)
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        r$headers$`x-next`,
+      mochita(server)$get("/foo")$expect(
+        "x-next",
         "route"
-      )
-
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw GET /foo"
-        )
-      )
+      )$expect(
+        200L,
+        "saw GET /foo"
+      )$perform()
     })
 
     it("should skip next handlers in route", {
       router <- Router$new()
       route <- router$route("/foo")
-      route$all(create_hit_handle(1))
+      route$all(createHitHandle(1))
       route$get(\(req, res) {
         res$headers[["x-next"]] <- "route"
         forward("route")
       })
-      route$all(create_hit_handle(2))
+      route$all(createHitHandle(2))
       router$use(saw)
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      should_hit_handle(r, 1)
-      expect_identical(
-        r$headers$`x-next`,
+      mochita(server)$get("/foo")$expect(
+        shouldHitHandle(1)
+      )$expect(
+        "x-next",
         "route"
-      )
-      should_not_hit_handle(r, 2)
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "saw GET /foo"
-        )
-      )
+      )$expect(
+        shouldNotHitHandle(2)
+      )$expect(
+        200L,
+        "saw GET /foo"
+      )$perform()
     })
 
     it("should not invoke error handlers", {
@@ -533,13 +428,10 @@ describe("route", {
       })
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        r$headers$`x-next`,
+      mochita(server)$get("/foo")$expect(
+        "x-next",
         "route"
-      )
-      expect_identical(r$status, 404L)
+      )$expect(404L)$perform()
     })
   })
 
@@ -553,20 +445,20 @@ describe("route", {
           res$headers[["x-next"]] <- "router"
           forward("router")
         },
-        create_hit_handle(1)
+        createHitHandle(1)
       )
 
       router$use(saw)
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        r$headers$`x-next`,
+      mochita(server)$get("/foo")$expect(
+        "x-next",
         "router"
-      )
-      should_not_hit_handle(r, 1)
-      expect_identical(r$status, 404L)
+      )$expect(
+        shouldNotHitHandle(1)
+      )$expect(
+        404L
+      )$perform()
     })
 
     it("should not invoke error handlers", {
@@ -591,14 +483,10 @@ describe("route", {
       })
 
       server <- createServer(router)
-      r <- fetch(server, "/foo")
-
-      expect_identical(
-        r$headers$`x-next`,
+      mochita(server)$get("/foo")$expect(
+        "x-next",
         "router"
-      )
-
-      expect_identical(r$status, 404L)
+      )$expect(404L)$perform()
     })
   })
 
@@ -610,18 +498,10 @@ describe("route", {
         route$all(sendParams)
 
         server <- createServer(router)
-        r <- fetch(server, "/bar")
-
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "foo:bar"
-          )
-        )
+        mochita(server)$get("/bar")$expect(
+          200L,
+          '{"foo":"bar"}'
+        )$perform()
       })
 
       it("should match single path segment", {
@@ -630,9 +510,7 @@ describe("route", {
         route$all(sendParams)
 
         server <- createServer(router)
-        r <- fetch(server, "/bar/bar")
-
-        expect_identical(r$status, 404L)
+        mochita(server)$get("/bar/bar")$expect(404L)$perform()
       })
 
       it("should work multiple times", {
@@ -641,18 +519,10 @@ describe("route", {
         route$all(sendParams)
 
         server <- createServer(router)
-        r <- fetch(server, "/fizz/buzz")
-
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "foo:fizz-bar:buzz"
-          )
-        )
+        mochita(server)$get("/fizz/buzz")$expect(
+          200L,
+          '{"foo":"fizz","bar":"buzz"}'
+        )$perform()
       })
 
       it("should work inside literal parentheses", {
@@ -661,18 +531,10 @@ describe("route", {
         route$all(sendParams)
 
         server <- createServer(router)
-        r <- fetch(server, "/tj(edit)")
-
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "user:tj-opp:edit"
-          )
-        )
+        mochita(server)$get("/tj(edit)")$expect(
+          200L,
+          '{"user":"tj","opp":"edit"}'
+        )$perform()
       })
 
       it("should work with a path vector of length > 1", {
@@ -682,29 +544,15 @@ describe("route", {
 
         server <- createServer(router)
 
-        r <- fetch(server, "/user/tj/poke")
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "user:tj"
-          )
-        )
+        mochita(server)$get("/user/tj/poke")$expect(
+          200L,
+          '{"user":"tj"}'
+        )$perform()
 
-        r <- fetch(server, "/user/tj/pokes")
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "user:tj"
-          )
-        )
+        mochita(server)$get("/user/tj/pokes")$expect(
+          200L,
+          '{"user":"tj"}'
+        )$perform()
       })
     })
 
@@ -715,31 +563,16 @@ describe("route", {
         route$all(sendParams)
 
         server <- createServer(router)
-        r <- fetch(server, "/bar")
 
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "foo:bar"
-          )
-        )
+        mochita(server)$get("/bar")$expect(
+          200L,
+          '{"foo":"bar"}'
+        )$perform()
 
-        r <- fetch(server, "/")
-
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            ""
-          )
-        )
+        mochita(server)$get("/")$expect(
+          200L,
+          "{}"
+        )$perform()
       })
 
       it("should work in any segment", {
@@ -749,31 +582,15 @@ describe("route", {
 
         server <- createServer(router)
 
-        r <- fetch(server, "/user/bar/delete")
+        mochita(server)$get("/user/bar/delete")$expect(
+          200L,
+          '{"foo":"bar"}'
+        )$perform()
 
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            "foo:bar"
-          )
-        )
-
-        r <- fetch(server, "/user/delete")
-
-        expect_identical(
-          list(
-            r$status,
-            r$body
-          ),
-          list(
-            200L,
-            ""
-          )
-        )
+        mochita(server)$get("/user/delete")$expect(
+          200L,
+          '{}'
+        )$perform()
       })
     })
   })
@@ -786,41 +603,20 @@ describe("route", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          ""
-        )
-      )
+      mochita(server)$get("/")$expect(
+        200L,
+        '{}'
+      )$perform()
 
-      r <- fetch(server, "/bar")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "foo:bar"
-        )
-      )
+      mochita(server)$get("/bar")$expect(
+        200L,
+        '{"foo":"bar"}'
+      )$perform()
 
-      r <- fetch(server, "/fizz/buzz")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          'foo:c("fizz", "buzz")'
-        )
-      )
+      mochita(server)$get("/fizz/buzz")$expect(
+        200L,
+        '{"foo":["fizz","buzz"]}'
+      )$perform()
     })
 
     it("should work in any segment", {
@@ -830,41 +626,20 @@ describe("route", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/user/delete")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          ""
-        )
-      )
+      mochita(server)$get("/user/delete")$expect(
+        200L,
+        '{}'
+      )$perform()
 
-      r <- fetch(server, "/user/bar/delete")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          "foo:bar"
-        )
-      )
+      mochita(server)$get("/user/bar/delete")$expect(
+        200L,
+        '{"foo":"bar"}'
+      )$perform()
 
-      r <- fetch(server, "/user/fizz/buzz/delete")
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          'foo:c("fizz", "buzz")'
-        )
-      )
+      mochita(server)$get("/user/fizz/buzz/delete")$expect(
+        200L,
+        '{"foo":["fizz","buzz"]}'
+      )$perform()
     })
   })
 })

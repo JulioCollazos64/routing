@@ -78,7 +78,7 @@ router$get(
 )
 
 ## ------------------------------------------------
-## Method `Router$param`
+## Method `Router$param()`
 ## ------------------------------------------------
 
 router <- Router$new()
@@ -95,119 +95,123 @@ router$get("/user/:id", function(req, res) {
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Router-new}{\code{Router$new()}}
-\item \href{#method-Router-handle}{\code{Router$handle()}}
-\item \href{#method-Router-use}{\code{Router$use()}}
-\item \href{#method-Router-route}{\code{Router$route()}}
-\item \href{#method-Router-param}{\code{Router$param()}}
-\item \href{#method-Router-static}{\code{Router$static()}}
-\item \href{#method-Router-getStack}{\code{Router$getStack()}}
-\item \href{#method-Router-clone}{\code{Router$clone()}}
-}
+  \itemize{
+    \item \href{#method-Router-initialize}{\code{Router$new()}}
+    \item \href{#method-Router-handle}{\code{Router$handle()}}
+    \item \href{#method-Router-use}{\code{Router$use()}}
+    \item \href{#method-Router-route}{\code{Router$route()}}
+    \item \href{#method-Router-param}{\code{Router$param()}}
+    \item \href{#method-Router-static}{\code{Router$static()}}
+    \item \href{#method-Router-getStack}{\code{Router$getStack()}}
+    \item \href{#method-Router-clone}{\code{Router$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Router-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Router-new}{}}}
-\subsection{Method \code{new()}}{
-Creates a new \code{Router}.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$new(caseSensitive = FALSE, mergeParams = FALSE, strict = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{caseSensitive}}{(\code{logical(1)})\cr
+\if{html}{\out{<a id="method-Router-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Router-initialize}{}}}
+\subsection{\code{Router$new()}}{
+  Creates a new \code{Router}.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$new(caseSensitive = FALSE, mergeParams = FALSE, strict = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{caseSensitive}}{(\code{logical(1)})\cr
 When \code{TRUE}, path matching is case-sensitive (\verb{/Foo} does not match \verb{/foo}).
 Default \code{FALSE}.}
-
-\item{\code{mergeParams}}{(\code{logical(1)})\cr
+      \item{\code{mergeParams}}{(\code{logical(1)})\cr
 When \code{TRUE}, \code{req$params} from a parent router are merged with those of
 this router instead of being replaced. Default \code{FALSE}.}
-
-\item{\code{strict}}{(\code{logical(1)})\cr
+      \item{\code{strict}}{(\code{logical(1)})\cr
 When \code{TRUE}, trailing slashes are significant (\verb{/foo/} does not match \verb{/foo}).
 Default \code{FALSE}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new \code{Router} object.
+  }
 }
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{Router} object.
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-handle"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-handle}{}}}
-\subsection{Method \code{handle()}}{
-Dispatches a request through the router's layer stack. Normally called
+\subsection{\code{Router$handle()}}{
+  Dispatches a request through the router's layer stack. Normally called
 by a server or a parent router rather than directly.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$handle(req, res = NULL, callback = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{req}}{(\code{environment})\cr Rook request environment.}
-
-\item{\code{res}}{(\code{Response})\cr Response object.}
-
-\item{\code{callback}}{(\code{function})\cr
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$handle(req, res = NULL, callback = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{req}}{(\code{environment})\cr Rook request environment.}
+      \item{\code{res}}{(\code{Response})\cr Response object.}
+      \item{\code{callback}}{(\code{function})\cr
 Called when no layer matched or an unhandled error occurred.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-use"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-use}{}}}
-\subsection{Method \code{use()}}{
-Mounts one or more middleware handlers, optionally scoped to a path prefix.
+\subsection{\code{Router$use()}}{
+  Mounts one or more middleware handlers, optionally scoped to a path prefix.
 A \link{Router} may be passed and will be wrapped automatically. Functions whose
 first parameter is named \code{err} are treated as error handlers.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$use(...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{...}}{(\verb{function | list})\cr
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$use(...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{(\verb{function | list})\cr
 An optional leading \code{character(1)} path prefix, followed by one or more
 handler functions, nested lists of functions, or another \link{Router}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    \code{self} invisibly.
+  }
 }
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-\code{self} invisibly.
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-route"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-route}{}}}
-\subsection{Method \code{route()}}{
-Creates a new \code{Route} for \code{path} and appends it to the stack.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$route(path)}\if{html}{\out{</div>}}
+\subsection{\code{Router$route()}}{
+  Creates a new \code{Route} for \code{path} and appends it to the stack.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$route(path)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{(\code{character(1)})\cr Path pattern.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new \code{Route} invisibly.
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{(\code{character(1)})\cr Path pattern.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-The new \code{Route} invisibly.
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-param"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-param}{}}}
-\subsection{Method \code{param()}}{
-Registers a callback triggered whenever a named route parameter is
+\subsection{\code{Router$param()}}{
+  Registers a callback triggered whenever a named route parameter is
 present in a matched route. The callback runs before the route handler.
 
 The callback signature is \verb{function(req, res, value, name)}:
@@ -215,26 +219,26 @@ The callback signature is \verb{function(req, res, value, name)}:
 \item \code{value} -- the captured value of the parameter.
 \item \code{name}  -- the parameter name (character).
 }
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$param(name, fn)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{name}}{(\code{character(1)})\cr Name of the route parameter to watch.}
-
-\item{\code{fn}}{(\code{function})\cr
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$param(name, fn)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{name}}{(\code{character(1)})\cr Name of the route parameter to watch.}
+      \item{\code{fn}}{(\code{function})\cr
 Callback with signature \verb{function(req, res, value, name)}.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-\code{self} invisibly.
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{router <- Router$new()
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    \code{self} invisibly.
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{router <- Router$new()
 
 router$param("id", function(req, res, value, name) {
   user <- findUser(value)
@@ -246,67 +250,70 @@ router$get("/user/:id", function(req, res) {
   res$send(paste("user:", req$user$name))
 })
 }
-\if{html}{\out{</div>}}
-
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-static"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-static}{}}}
-\subsection{Method \code{static()}}{
-Registers a directory of static files to be served at a given URL prefix.
+\subsection{\code{Router$static()}}{
+  Registers a directory of static files to be served at a given URL prefix.
 Static files are served directly by httpuv's background I/O thread without
 invoking R.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$static(root, url, ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{root}}{(\code{character(1)})\cr
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$static(root, url, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{root}}{(\code{character(1)})\cr
 Local filesystem path to the directory containing the files to serve.}
-
-\item{\code{url}}{(\code{character(1)})\cr
+      \item{\code{url}}{(\code{character(1)})\cr
 URL prefix at which the files will be available (e.g. \code{"/static"}).}
+      \item{\code{...}}{Additional arguments passed to \code{\link[httpuv:staticPath]{httpuv::staticPath()}}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    \code{self} invisibly.
+  }
+}
 
-\item{\code{...}}{Additional arguments passed to \code{\link[httpuv:staticPath]{httpuv::staticPath()}}.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-\code{self} invisibly.
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-getStack"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-getStack}{}}}
-\subsection{Method \code{getStack()}}{
-Returns the internal layer stack.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$getStack()}\if{html}{\out{</div>}}
+\subsection{\code{Router$getStack()}}{
+  Returns the internal layer stack.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$getStack()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    \code{list} of \code{Layer} objects.
+  }
 }
 
-\subsection{Returns}{
-\code{list} of \code{Layer} objects.
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Router-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Router-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Router$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Router$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Router$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

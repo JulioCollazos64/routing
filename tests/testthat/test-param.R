@@ -1,11 +1,4 @@
 describe("Router", {
-  on.exit(
-    {
-      httpuv::stopAllServers()
-    },
-    add = TRUE
-  )
-
   describe("$param(name, fn)", {
     describe("argument validation", {
       it("should reject missing name", {
@@ -46,12 +39,10 @@ describe("Router", {
       })
 
       server <- createServer(router)
+      request <- mochita(server)
 
-      r <- fetch(server, "/user/2")
-      expect_identical(list(r$status, r$body), list(200L, "get user 2"))
-
-      r <- fetch(server, "/user/bob")
-      expect_identical(list(r$status, r$body), list(200L, "get user NA"))
+      request$get("/user/2")$expect(200L, "get user 2")$perform()
+      request$get("/user/bob")$expect(200L, "get user NA")$perform()
     })
 
     it("should allow chaining", {
@@ -71,9 +62,10 @@ describe("Router", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, "/user/2")
-      expect_identical(list(r$status, r$body), list(200L, "get user 2 (2)"))
+      mochita(server)$get("/user/2")$expect(
+        200L,
+        "get user 2 (2)"
+      )$perform()
     })
 
     it("should automatically decode path value", {
@@ -88,9 +80,9 @@ describe("Router", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, '/user/%22bob%2Frobert%22')
-      expect_identical(r$body, 'get user "bob/robert"')
+      mochita(server)$get("/user/%22bob%2Frobert%22")$expect(
+        'get user "bob/robert"'
+      )$perform()
     })
 
     # neither utils::URLdecode nor httpuv::decodeURIComponent return an error here...
@@ -128,15 +120,17 @@ describe("Router", {
       router$put("/user/:id", saw)
 
       server <- createServer(router)
+      request <- mochita(server)
 
-      r <- fetch(server, "/user/bob", method = "GET")
-      expect_identical(r$status, 500L)
+      request$get("/user/bob")$expect(500L)$perform()
 
-      r <- fetch(server, "/user/bob", method = "PUT")
-      expect_identical(
-        list(r$status, r$headers[["x-id"]], r$body),
-        list(200L, "bob", "saw PUT /user/bob")
-      )
+      mochita(server)$put("/user/bob")$expect(
+        200L,
+        "saw PUT /user/bob"
+      )$expect(
+        "x-id",
+        "bob"
+      )$perform()
     })
 
     it("should only invoke fn once per request", {
@@ -147,8 +141,8 @@ describe("Router", {
         req$user <- value
       })
 
-      router$get("/user/:user", create_hit_handle(1))
-      router$get("/user/:user", create_hit_handle(2))
+      router$get("/user/:user", createHitHandle(1))
+      router$get("/user/:user", createHitHandle(2))
 
       router$use(\(req, res) {
         res$status <- 200L
@@ -156,12 +150,10 @@ describe("Router", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, "/user/bob")
-      expect_identical(
-        list(r$status, r$body),
-        list(200L, "get user bob 1 times")
-      )
+      mochita(server)$get("/user/bob")$expect(
+        200L,
+        "get user bob 1 times"
+      )$perform()
     })
 
     it("should keep changes to req$params value", {
@@ -183,9 +175,10 @@ describe("Router", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, "/user/01")
-      expect_identical(list(r$status, r$body), list(200L, "get user 1 1 times"))
+      mochita(server)$get("/user/01")$expect(
+        200L,
+        "get user 1 1 times"
+      )$perform()
     })
 
     it("should invoke fn if path value differs", {
@@ -197,8 +190,8 @@ describe("Router", {
         req$vals <- c(req$vals, value)
       })
 
-      router$get("/:user/bob", create_hit_handle(1))
-      router$get("/user/:user", create_hit_handle(2))
+      router$get("/:user/bob", createHitHandle(1))
+      router$get("/user/:user", createHitHandle(2))
 
       router$use(\(req, res) {
         res$status <- 200L
@@ -213,12 +206,10 @@ describe("Router", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, "/user/bob")
-      expect_identical(
-        list(r$status, r$body),
-        list(200L, "get user bob 2 times: user, bob")
-      )
+      mochita(server)$get("/user/bob")$expect(
+        200L,
+        "get user bob 2 times: user, bob"
+      )$perform()
     })
 
     it("should catch exception in fn", {
@@ -235,8 +226,7 @@ describe("Router", {
 
       server <- createServer(router)
 
-      r <- fetch(server, "/user/bob")
-      expect_identical(r$status, 500L)
+      mochita(server)$get("/user/bob")$expect(500L)$perform()
     })
 
     it("should catch exception in chained fn", {
@@ -254,9 +244,7 @@ describe("Router", {
       })
 
       server <- createServer(router)
-
-      r <- fetch(server, "/user/bob")
-      expect_identical(r$status, 500L)
+      mochita(server)$get("/user/bob")$expect(500L)$perform()
     })
 
     describe('forward("route")', {
@@ -283,18 +271,19 @@ describe("Router", {
         })
 
         server <- createServer(router)
+        request <- mochita(server)
 
-        r <- fetch(server, "/user/2")
-        expect_identical(list(r$status, r$body), list(200L, "get user 2"))
+        request$get("/user/2")$expect(
+          200L,
+          "get user 2"
+        )$perform()
 
-        r <- fetch(server, "/user/bob")
-        expect_identical(r$status, 404L)
+        request$get("/user/bob")$expect(404L)$perform()
 
-        r <- fetch(server, "/user/new")
-        expect_identical(
-          list(r$status, r$body),
-          list(400L, "cannot get a new user")
-        )
+        request$get("/user/new")$expect(
+          400L,
+          "cannot get a new user"
+        )$perform()
       })
 
       it("should invoke fn if path value differs", {
@@ -307,8 +296,8 @@ describe("Router", {
           forward(if (identical(value, "user")) "route" else NULL)
         })
 
-        router$get("/:user/bob", create_hit_handle(1))
-        router$get("/user/:user", create_hit_handle(2))
+        router$get("/:user/bob", createHitHandle(1))
+        router$get("/user/:user", createHitHandle(2))
 
         router$use(\(req, res) {
           res$status <- 200L
@@ -323,14 +312,14 @@ describe("Router", {
         })
 
         server <- createServer(router)
-
-        r <- fetch(server, "/user/bob")
-        should_not_hit_handle(r, 1)
-        should_hit_handle(r, 2)
-        expect_identical(
-          list(r$status, r$body),
-          list(200L, "get user bob 2 times: user, bob")
-        )
+        mochita(server)$get("/user/bob")$expect(
+          shouldNotHitHandle(1)
+        )$expect(
+          shouldHitHandle(2)
+        )$expect(
+          200L,
+          "get user bob 2 times: user, bob"
+        )$perform()
       })
     })
   })

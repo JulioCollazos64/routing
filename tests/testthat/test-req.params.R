@@ -1,37 +1,31 @@
 describe("req$params", {
-  on.exit(
-    {
-      httpuv::stopAllServers()
-    },
-    add = TRUE
-  )
-
   it("should default to empty object", {
     router <- Router$new()
     router$get("/", sawParams)
 
     server <- createServer(router)
-
-    r <- fetch(server, "/")
-
-    expect_identical(r$body, "[]")
+    mochita(server)$get("/")$expect(
+      "{}"
+    )$perform()
   })
 
   it("should not exist outside the router", {
     router <- Router$new()
     router$get("/", hitParams(1))
 
-    server <- createServer(function(req, res) {
-      router$handle(req, res, function(err = NULL) {
+    server <- createServer(function(req, res, forward) {
+      router$handle(req, res, function(err) {
         if (!is.null(err)) {
-          return(finalHandler(req, res)(err))
+          return(forward(err))
         }
         sawParams(req, res)
       })
     })
 
-    r <- fetch(server, "/")
-    expect_identical(r$headers[["x-params-1"]], "[]")
+    mochita(server)$get("/")$expect(
+      "x-params-1",
+      "{}"
+    )$perform()
   })
 
   it("should overwrite value outside the router", {
@@ -39,14 +33,13 @@ describe("req$params", {
     router$get("/", sawParams)
 
     server <- createServer(
-      function(req, res) {
+      function(req, res, forward) {
         req$params <- list(foo = "bar")
         router$handle(req, res)
       }
     )
 
-    r <- fetch(server, "/")
-    expect_identical(r$body, "[]")
+    mochita(server)$get("/")$expect(200L, "{}")$perform()
   })
 
   it("should restore previous value outside the router", {
@@ -54,7 +47,7 @@ describe("req$params", {
     router$get("/", hitParams(1))
 
     server <- createServer(
-      function(req, res) {
+      function(req, res, forward) {
         req$params <- list(foo = "bar")
         router$handle(req, res, function(err) {
           if (!is.null(err)) {
@@ -65,19 +58,13 @@ describe("req$params", {
         })
       }
     )
-
-    r <- fetch(server, "/")
-    expect_identical(r$headers$`x-params-1`, "[]")
-    expect_identical(
-      list(
-        r$status,
-        r$body
-      ),
-      list(
-        200L,
-        '{"foo":["bar"]}'
-      )
-    )
+    mochita(server)$get("/")$expect(
+      "x-params-1",
+      "{}"
+    )$expect(
+      200L,
+      '{"foo":"bar"}'
+    )$perform()
   })
 
   describe('when "mergeParams: true"', {
@@ -95,12 +82,13 @@ describe("req$params", {
         })
       })
 
-      r <- fetch(server, "/buzz")
-
-      expect_identical(
-        r$headers$`x-params-1`,
-        '{"foo":["bar"],"fizz":["buzz"]}'
-      )
+      mochita(server)$get("/buzz")$expect(
+        "x-params-1",
+        '{"foo":"bar","fizz":"buzz"}'
+      )$expect(
+        200L,
+        '{"foo":"bar"}'
+      )$perform()
     })
 
     it("should ignore non-list outside env", {
@@ -108,7 +96,7 @@ describe("req$params", {
       router$get("/:fizz", hitParams(1))
 
       server <- createServer(\(req, res, forward) {
-        req$params <- 6
+        req$params <- 42
 
         router$handle(req, res, function(err) {
           if (!is.null(err)) {
@@ -118,17 +106,13 @@ describe("req$params", {
         })
       })
 
-      r <- fetch(server, "/buzz")
-
-      expect_identical(
-        r$headers$`x-params-1`,
-        '{"fizz":["buzz"]}'
-      )
-
-      expect_identical(
-        r$body,
-        "[6.0]"
-      )
+      mochita(server)$get("/buzz")$expect(
+        "x-params-1",
+        '{"fizz":"buzz"}'
+      )$expect(
+        200L,
+        '42'
+      )$perform()
     })
 
     it("should overwrite outside keys that are the same", {
@@ -145,18 +129,13 @@ describe("req$params", {
         })
       })
 
-      r <- fetch(server, "/buzz")
-      expect_identical(r$headers$`x-params-1`, '{"foo":["buzz"]}')
-      expect_identical(
-        list(
-          r$status,
-          r$body
-        ),
-        list(
-          200L,
-          '{"foo":["bar"]}'
-        )
-      )
+      mochita(server)$get("/buzz")$expect(
+        "x-params-1",
+        '{"foo":"buzz"}'
+      )$expect(
+        200L,
+        '{"foo":"bar"}'
+      )$perform()
     })
   })
 })
