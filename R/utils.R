@@ -27,9 +27,7 @@ isPromise <- function(x) {
 #' @keywords internal
 #' @noRd
 isResponse <- function(x) {
-  is.list(x) &&
-    length(x) == 3 &&
-    all(c("status", "headers", "body") %in% names(x))
+  is.list(x) && identical(names(x), c("status", "headers", "body"))
 }
 
 #' Add forward as a function argument
