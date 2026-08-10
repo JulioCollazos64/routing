@@ -27,7 +27,7 @@ isPromise <- function(x) {
 #' @keywords internal
 #' @noRd
 isResponse <- function(x) {
-  is.list(x) && identical(names(x), c("status", "headers", "body"))
+  is.list(x) && setequal(names(x), c("status", "headers", "body"))
 }
 
 #' Add forward as a function argument
