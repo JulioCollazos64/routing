@@ -11,7 +11,6 @@ Description: It aims to provide R web frameworks a routing mechanism of HTTP
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, r6 = TRUE)
-RoxygenNote: 7.3.3
 Imports: 
     httpcode,
     pater,
@@ -25,3 +24,4 @@ Suggests:
 Config/testthat/edition: 3
 URL: https://github.com/JulioCollazos64/routing
 BugReports: https://github.com/JulioCollazos64/routing/issues
+Config/roxygen2/version: 8.0.0
