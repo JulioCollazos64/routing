@@ -21,7 +21,7 @@ createServer <- function(router) {
         res <- Response$new()
         handler(req, res, finalHandler(req, res))
       },
-      staticsPaths = staticsPaths
+      staticPaths = staticsPaths
     )
   }
 
