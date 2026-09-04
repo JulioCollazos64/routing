@@ -46,7 +46,7 @@ Layer <- R6::R6Class(
             )
           }
 
-          forward(err)
+          forward(error)
         },
         error = function(err) {
           forward(err)

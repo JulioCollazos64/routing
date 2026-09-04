@@ -348,6 +348,29 @@ describe("route", {
         }
       )$perform()
     })
+
+    it("should preserve the original error when forwarding from an empty error handler", {
+      router <- Router$new()
+      route <- router$route("/foo")
+
+      route$all(\(req, res) {
+        stop("boom!")
+      })
+      route$all(\(err, req, res) {
+        conditionMessage(err)
+      })
+      route$all(\(err, req, res) {
+        res$status <- 500L
+        msg <- conditionMessage(err)
+        res$send(paste("second handler saw:", msg))
+      })
+
+      server <- createServer(router)
+      mochita(server)$get("/foo")$expect(
+        500L,
+        "second handler saw: boom!"
+      )$perform()
+    })
   })
 
   describe('forward("route")', {
